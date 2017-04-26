@@ -21,14 +21,14 @@
     document.body.appendChild( renderer.domElement );
 
     var geometry = new THREE.BoxGeometry( 1, 1, 1 );
-    var material = new THREE.MeshLambertMaterial( { color: 0x00ff00 } );
+    var material = new THREE.MeshLambertMaterial( { color: 0xffffff, map: THREE.ImageUtils.loadTexture( 'images/crate.jpg' )} );
     var cube = new THREE.Mesh( geometry, material );
     scene.add( cube );
 
     var light = new THREE.AmbientLight( 0x404040 ); // soft white light
     scene.add( light );
 
-    var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+    var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.9 );
     directionalLight.position.set( 10, 5, 8 );
 //    directionalLight.target = cube;
     scene.add( directionalLight );
