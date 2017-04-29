@@ -22,17 +22,31 @@
     camera.position.y = myHeight;
     camera.up = new THREE.Vector3(0,1,0);
     camera.lookAt({x:-1, y:myHeight, z:0});
-	camera.rotation.order = 'YXZ';
 
     var renderer = new THREE.WebGLRenderer();
     renderer.setSize( 0.9*window.innerWidth, 0.9*window.innerHeight );  // TODO make it 100% screen
     document.body.appendChild( renderer.domElement );
+	
+	var texture = new THREE.TextureLoader().load( "images/checkerboard.jpg" );
+	texture.wrapS = THREE.RepeatWrapping;
+	texture.wrapT = THREE.RepeatWrapping;
+	texture.repeat.set( 10, 10 );
+	//texture.minFilter = THREE.LinearNearest;
+//	texture.magFilter = THREE.LinearFilter;
+
+	
+	var geometry = new THREE.PlaneGeometry( 100, 100 );
+    var material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
+	material.map = texture;
+    var plane = new THREE.Mesh( geometry, material );
 
 
-    var plane = new THREE.Mesh(
+
+    /*var plane = new THREE.Mesh(
         new THREE.PlaneGeometry( 100, 100),
-        new THREE.MeshBasicMaterial( {color: 0x332222, side: THREE.DoubleSide} )
-    );
+        new THREE.MeshBasicMaterial( {color: 0x332222, side: THREE.DoubleSide,  map: THREE.ImageUtils.loadTexture( 'images/checkerboard.jpg' )} )
+    );*/
+
     plane.rotation.x = 3.14/2;
     scene.add( plane );
 
@@ -67,7 +81,8 @@
         var keycode = event.keyCode;
         switch(keycode){
             case 37 : //left
-                camera.rotation.y += rotationSpeed;
+                //camera.rotation.y += rotationSpeed;
+				camera.rotateOnAxis((new THREE.Vector3(0, 1, 0)).normalize(), degInRad(1));
                 break;
             case 38 : // up
                 camera.position.x -= walkingSpeed*Math.sin(camera.rotation.y);
@@ -91,6 +106,14 @@
             case 67 : // c
 				// look down
 				camera.rotateOnAxis((new THREE.Vector3(1, 0, 0)).normalize(), degInRad(-1));
+                break;
+				
+			case 81 : // q
+				camera.position.z +=walkingSpeed;
+                break;
+				
+			case 87 : // w
+				camera.position.z -=walkingSpeed;
                 break;
 			
         }
