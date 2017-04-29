@@ -22,6 +22,7 @@
     camera.position.y = myHeight;
     camera.up = new THREE.Vector3(0,1,0);
     camera.lookAt({x:-1, y:myHeight, z:0});
+	camera.rotation.order = 'YXZ';
 
     var renderer = new THREE.WebGLRenderer();
     renderer.setSize( 0.9*window.innerWidth, 0.9*window.innerHeight );  // TODO make it 100% screen
@@ -56,7 +57,7 @@
     var render = function () {
         requestAnimationFrame( render );
 
-        cube.rotation.x += 0.01;
+        //cube.rotation.x += 0.01;
 
         camera.updateProjectionMatrix();
         renderer.render(scene, camera);
@@ -85,16 +86,23 @@
                 break;
             case 68 : // d
                 // look up
+				camera.rotateOnAxis((new THREE.Vector3(1, 0, 0)).normalize(), degInRad(1)); //niby działa, ale sześcian jakiś rozjechany :O
                 break;
             case 67 : // c
 				// look down
+				camera.rotateOnAxis((new THREE.Vector3(1, 0, 0)).normalize(), degInRad(-1));
                 break;
+			
         }
     }, false);
 	document.addEventListener('keyup', function (event) {
         step = 0;
 		camera.position.y = myHeight;
     }, false);
+	
+	function degInRad(deg) {
+		return deg * Math.PI / 180;
+	} 
 
     render();
 </script>
