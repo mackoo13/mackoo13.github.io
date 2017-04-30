@@ -1,1 +1,2 @@
-Jak siê wciœnie 'd' i obróci o ponad 180, to potem '<' dzia³a jak 'd' :O
+Jak sie wcisnie 'd' i obrÃ³ci o ponad 180, to potem '<-' dziala jak 'd' :O
+Nie ma obrazka checkerboard
