@@ -1,0 +1,1 @@
+Jak siê wciœnie 'd' i obróci o ponad 180, to potem '<' dzia³a jak 'd' :O
