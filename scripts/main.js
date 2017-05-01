@@ -5,7 +5,7 @@ window.onload = function () {
 
         var wall = new THREE.Mesh(
             new THREE.BoxGeometry( xSize, wallHeight, zSize ),
-            new THREE.MeshLambertMaterial( { color: 0x3333ff} )
+            new THREE.MeshLambertMaterial( { color: 0x666666} )
         );
         wall.position.x = (toX+fromX)*fieldSize/2;
         wall.position.y = wallHeight/2;
@@ -14,10 +14,9 @@ window.onload = function () {
     }
 
     function placeColumn(x, z) {
-        console.log(9);
         var column = new THREE.Mesh(
-            new THREE.BoxGeometry( fieldSize, wallHeight, fieldSize ),
-            new THREE.MeshLambertMaterial( { color: 0xff3333} )
+            new THREE.CylinderGeometry(fieldSize/1.5, fieldSize/1.5, wallHeight, 32),
+            new THREE.MeshLambertMaterial( {color: 0xff3333} )
         );
         column.position.x = x*fieldSize;
         column.position.y = wallHeight/2;
@@ -55,11 +54,12 @@ window.onload = function () {
         for(var z=0; z<map.length; z++) {
             var startX = null;
             for(var x=0; x<map[z].length; x++) {
+                console.log(x+' '+z+' '+startX);
                 if(startX==null && m(x, z)==='#') startX = x;
                 else if(m(x, z)===' ') {
                     if(startX!=null) {
                         if(x!=startX+1) placeWall(startX, z, x-1, z);
-                        else if(m(x-1, z-1)===' ' && m(x-1, z+1)===' ') placeColumn(x-1, z);
+                        else if(m(x-1, z-1)!=='#' && m(x-1, z+1)!=='#') placeColumn(x-1, z);
                     }
                     startX = null;
                 }
@@ -71,7 +71,7 @@ window.onload = function () {
             var startZ = null;
             for(var z=0; z<map.length; z++) {
                 if(startZ==null && m(x, z)==='#') startZ = z;
-                else if(m(x, z)===' ') {
+                else if(m(x, z)!=='#') {
                     if(startZ!=null && z!=startZ+1) placeWall(x, startZ, x, z-1);
                     startZ = null;
                 }
@@ -81,12 +81,18 @@ window.onload = function () {
     }
 
     function addLights() {
-        var light = new THREE.AmbientLight( 0x999999 ); // soft white light
+        var light = new THREE.AmbientLight( 0x444444 ); // soft white light
         scene.add( light );
 
-        var directionalLight = new THREE.DirectionalLight( 0xffffff, 1 );
-        directionalLight.position.set( 10, 5, 8 );
-        scene.add( directionalLight );
+        for(var z=0; z<map.length; z++) {
+            for(var x=0; x<map[z].length; x++) {
+                if(m(x, z)==='*') {
+                    light = new THREE.PointLight( 0xffff00, 1, 100 );
+                    light.position.set(x*fieldSize, wallHeight, z*fieldSize);
+                    scene.add( light );
+                }
+            }
+        }
     }
 
     var map = [
@@ -110,21 +116,21 @@ window.onload = function () {
     var rotationSpeed = 0.25;
 
     var startingPosition = { x: 8, z: 5 };
-    var myHeight = 33;
+    var myHeight = 3;
 
     var wallHeight = 5;
     var wallWidth = 2;
 
-// scene init
+    // scene init
     var renderer = new THREE.WebGLRenderer();
     renderer.setSize( 0.9*window.innerWidth, 0.9*window.innerHeight );  // TODO make it 100% screen
     document.body.appendChild( renderer.domElement );
 
-// camera init
+    // camera init
     var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
     camera.position.set(startingPosition.x*fieldSize, myHeight, startingPosition.z*fieldSize);
     camera.up = new THREE.Vector3(0,1,0);
-    camera.lookAt({x: startingPosition.x*fieldSize+1, y: myHeight/11, z: 0});
+    camera.lookAt({x: startingPosition.x*fieldSize+1, y: myHeight, z: 0});
     camera.rotation.order = 'YXZ';
 
     drawFloor();
