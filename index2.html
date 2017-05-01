@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset=utf-8>
+  <title>Labyrinth</title>
+  <style>
+  body { margin: 0; }
+  canvas { width: 100%; height: 100% }
+  </style>
+  <script src="scripts/three.js"></script>
+  <script src="scripts/FirstPersonControls.js"></script>
+</head>
+<body>
+  <script>
+
+  var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
+  var step = 0;
+  var stepHeight = 0.15;
+  var walkingSpeed = 0.05;
+  var rotationSpeed = 0.05;
+  var myHeight = 3;
+  var controls;
+  var clock = new THREE.Clock();
+
+  camera.position.y = myHeight;
+  camera.up = new THREE.Vector3(0,1,0);
+  camera.lookAt({x:-1, y:myHeight, z:0});
+
+  controls = new THREE.FirstPersonControls( camera );
+  controls.movementSpeed = 10;
+  controls.lookSpeed = 0.0125;
+  controls.lookVertical = true;
+
+  var scene = new THREE.Scene();
+
+
+  var renderer = new THREE.WebGLRenderer();
+  renderer.setSize( 0.95*window.innerWidth, 0.95*window.innerHeight );  // TODO make it 100% screen
+  document.body.appendChild( renderer.domElement );
+
+  var texture = new THREE.TextureLoader().load( "images/checkerboard.jpg" );
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set( 8, 8 );
+  //texture.minFilter = THREE.LinearNearest;
+  //	texture.magFilter = THREE.LinearFilter;
+
+
+  var geometry = new THREE.PlaneGeometry( 400, 400 );
+  var material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
+  material.map = texture;
+  var plane = new THREE.Mesh( geometry, material );
+
+
+
+  /*var plane = new THREE.Mesh(
+  new THREE.PlaneGeometry( 100, 100),
+  new THREE.MeshBasicMaterial( {color: 0x332222, side: THREE.DoubleSide,  map: THREE.ImageUtils.loadTexture( 'images/checkerboard.jpg' )} )
+);*/
+
+plane.rotation.x = 3.14/2;
+scene.add( plane );var clock = new THREE.Clock();
+
+
+var cube = new THREE.Mesh(
+  new THREE.BoxGeometry( 10, 10, 10 ),
+  new THREE.MeshLambertMaterial( { color: 0xffffff, map: THREE.ImageUtils.loadTexture( 'images/crate.jpg' )} )
+);
+//cube.position.x = -11.4;
+cube.position.x = 10;
+cube.position.y = 3;
+cube.position.z = 2;
+scene.add( cube );
+
+
+var light = new THREE.AmbientLight( 0x444444 ); // soft white light
+scene.add( light );
+
+var directionalLight = new THREE.DirectionalLight( 0xffffff, 1 );
+directionalLight.position.set( 10, 5, 8 );
+scene.add( directionalLight );
+
+var render = function () {
+  requestAnimationFrame( render );
+
+  camera.updateProjectionMatrix();
+  controls.update( clock.getDelta() );
+
+  renderer.render(scene, camera);
+};
+
+
+render();
+</script>
+</body>
+</html>
