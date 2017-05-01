@@ -32,6 +32,57 @@
         return map[y][x];
     }
 
+    function drawFloor() {
+        var texture = new THREE.TextureLoader().load( "images/checkerboard.jpg" );
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set( 8, 8 );
+        //texture.minFilter = THREE.LinearNearest;
+        //texture.magFilter = THREE.LinearFilter;
+
+        var geometry = new THREE.PlaneGeometry( 400, 400 );
+        var material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
+        material.map = texture;
+        var plane = new THREE.Mesh( geometry, material );
+        plane.rotation.x = 3.14/2;
+        scene.add(plane);
+    }
+
+    function drawWalls() {
+        for(var y=0; y<map.length; y++) {
+            var startX = null;
+            for(var x=0; x<map[y].length; x++) {
+                if(startX==null && m(x, y)==='#') startX = x;
+                else if(m(x, y)===' ') {
+                    if(startX!=null && x!=startX) placeWall(startX, y, x-1, y);
+                    startX = null;
+                }
+            }
+            if(startX!=null) placeWall(startX, y, map[y].length-1, y);
+        }
+
+        for(var x=0; x<map[0].length; x++) {
+            var startZ = null;
+            for(var z=0; z<map.length; z++) {
+                if(startZ==null && m(x, z)==='#') startZ = z;
+                else if(m(x, z)===' ') {
+                    if(startZ!=null && z!=startZ) placeWall(x, startZ, x, z-1);
+                    startZ = null;
+                }
+            }
+            if(startZ!=null) placeWall(x, startZ, x, map.length-1);
+        }
+    }
+
+    function addLights() {
+        var light = new THREE.AmbientLight( 0x999999 ); // soft white light
+        scene.add( light );
+
+        var directionalLight = new THREE.DirectionalLight( 0xffffff, 1 );
+        directionalLight.position.set( 10, 5, 8 );
+        scene.add( directionalLight );
+    }
+
     var map = [
         "####################",
         "###          #      ",
@@ -47,79 +98,31 @@
     var fieldSize = 4;
 
     var scene = new THREE.Scene();
-    var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
 	var step = 0;
 	var stepHeight = 0.15;
 	var walkingSpeed = 0.65;
 	var rotationSpeed = 0.25;
+
+	var startingPosition = { x: 2, z: 5 };
 	var myHeight = 3;
+
 	var wallHeight = 5;
 	var wallWidth = 2;
 
-    camera.position.y = myHeight;
-    camera.up = new THREE.Vector3(0,1,0);
-    camera.lookAt({x: 0, y: myHeight, z: 0});
-	
-
+	// scene init
     var renderer = new THREE.WebGLRenderer();
     renderer.setSize( 0.9*window.innerWidth, 0.9*window.innerHeight );  // TODO make it 100% screen
     document.body.appendChild( renderer.domElement );
-	
-	var texture = new THREE.TextureLoader().load( "images/checkerboard.jpg" );
-	texture.wrapS = THREE.RepeatWrapping;
-	texture.wrapT = THREE.RepeatWrapping;
-	texture.repeat.set( 8, 8 );
-	//texture.minFilter = THREE.LinearNearest;
-//	texture.magFilter = THREE.LinearFilter;
 
-	
-	var geometry = new THREE.PlaneGeometry( 400, 400 );
-    var material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
-	material.map = texture;
-    var plane = new THREE.Mesh( geometry, material );
+	// camera init
+    var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
+    camera.position.set(startingPosition.x*fieldSize, myHeight, startingPosition.z*fieldSize);
+    camera.up = new THREE.Vector3(0,1,0);
+    camera.lookAt({x: startingPosition.x*fieldSize+1, y: myHeight, z: 0});
 
-
-
-    /*var plane = new THREE.Mesh(
-        new THREE.PlaneGeometry( 100, 100),
-        new THREE.MeshBasicMaterial( {color: 0x332222, side: THREE.DoubleSide,  map: THREE.ImageUtils.loadTexture( 'images/checkerboard.jpg' )} )
-    );*/
-
-    plane.rotation.x = 3.14/2;
-    scene.add( plane );
-
-
-    for(var y=0; y<map.length; y++) {
-        var startX = null;
-        for(var x=0; x<map[y].length; x++) {
-            if(startX==null && m(x, y)==='#') startX = x;
-            else if(m(x, y)===' ') {
-                if(startX!=null && x!=startX) placeWall(startX, y, x-1, y);
-                startX = null;
-            }
-        }
-        if(startX!=null) placeWall(startX, y, map[y].length-1, y);
-    }
-
-    for(var x=0; x<map[0].length; x++) {
-        var startZ = null;
-        for(var z=0; z<map.length; z++) {
-            if(startZ==null && m(x, z)==='#') startZ = z;
-            else if(m(x, z)===' ') {
-                if(startZ!=null && z!=startZ) placeWall(x, startZ, x, z-1);
-                startZ = null;
-            }
-        }
-        if(startZ!=null) placeWall(x, startZ, x, map.length-1);
-    }
-
-
-    var light = new THREE.AmbientLight( 0x999999 ); // soft white light
-    scene.add( light );
-
-    var directionalLight = new THREE.DirectionalLight( 0xffffff, 1 );
-    directionalLight.position.set( 10, 5, 8 );
-    scene.add( directionalLight );
+	drawFloor();
+    drawWalls();
+    addLights();
 
     var render = function () {
         requestAnimationFrame( render );
