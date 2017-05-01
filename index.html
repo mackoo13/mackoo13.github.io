@@ -11,17 +11,51 @@
 </head>
 <body>
 <script>
+
+    function placeWall(fromX, fromZ, toX, toZ) {
+        console.log(fromX + ' ' + fromZ + ' ' + toX + ' ' + toZ);
+        var xSize = (toX-fromX)*fieldSize + 2*wallWidth;
+        var zSize = (toZ-fromZ)*fieldSize + 2*wallWidth;
+
+        var wall = new THREE.Mesh(
+            new THREE.BoxGeometry( xSize, wallHeight, zSize ),
+            new THREE.MeshLambertMaterial( { color: 0x3333ff} )
+        );
+        wall.position.x = (toX+fromX)*fieldSize/2;
+        wall.position.y = wallHeight/2;
+        wall.position.z = (toZ+fromZ)*fieldSize/2;
+        scene.add( wall );
+    }
+
+    function m(x, y) {
+        if(x<0 || x>=map[0].length || y<0 || y>=map.length) return ' ';
+        return map[y][x];
+    }
+
+    var map = [
+      "  #  ",
+      "#####",
+      "#    ",
+      "### #",
+      "  # #",
+      "#####",
+      "#    "
+    ];
+    var fieldSize = 1;
+
     var scene = new THREE.Scene();
     var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
 	var step = 0;
 	var stepHeight = 0.15;
-	var walkingSpeed = 0.05;
-	var rotationSpeed = 0.05;
-	var myHeight = 3;
-	
+	var walkingSpeed = 0.65;
+	var rotationSpeed = 0.25;
+	var myHeight = 33;
+	var wallHeight = 3;
+	var wallWidth = 0.2;
+
     camera.position.y = myHeight;
     camera.up = new THREE.Vector3(0,1,0);
-    camera.lookAt({x:-1, y:myHeight, z:0});
+    camera.lookAt({x: 0, y: myHeight/11, z: 0});
 	
 
     var renderer = new THREE.WebGLRenderer();
@@ -52,18 +86,20 @@
     scene.add( plane );
 
 
-    var cube = new THREE.Mesh(
-        new THREE.BoxGeometry( 10, 10, 10 ),
-        new THREE.MeshLambertMaterial( { color: 0xffffff, map: THREE.ImageUtils.loadTexture( 'images/crate.jpg' )} )
-    );
-    //cube.position.x = -11.4;
-	cube.position.x = 10;
-    cube.position.y = 3;
-    cube.position.z = 2;
-    scene.add( cube );
+    for(var y=0; y<map.length; y++) {
+        var startX = null;
+        for(var x=0; x<map[y].length; x++) {
+            if(startX==null && m(x, y)==='#') startX = x;
+            else if(m(x, y)===' ') {
+                if(startX!=null && x!=startX) placeWall(startX, y, x-1, y);
+                startX = null;
+            }
+        }
+        if(startX!=null) placeWall(startX, y, map[y].length-1, y);
+    }
 
 
-    var light = new THREE.AmbientLight( 0x444444 ); // soft white light
+    var light = new THREE.AmbientLight( 0x999999 ); // soft white light
     scene.add( light );
 
     var directionalLight = new THREE.DirectionalLight( 0xffffff, 1 );
