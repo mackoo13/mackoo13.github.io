@@ -1,22 +1,32 @@
 window.onload = function () {
     function placeWall(fromX, fromZ, toX, toZ) {
+
+        var texture = new THREE.TextureLoader().load( "images/stone.jpg" );
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set( 20, 3 );
+        //texture.minFilter = THREE.LinearNearest;
+        //texture.magFilter = THREE.LinearFilter;
+
         var xSize = (toX-fromX)*fieldSize + 2*wallWidth;
         var zSize = (toZ-fromZ)*fieldSize + 2*wallWidth;
 
         var wall = new THREE.Mesh(
             new THREE.BoxGeometry( xSize, wallHeight, zSize ),
-            new THREE.MeshLambertMaterial( { color: 0x666666} )
+            new THREE.MeshLambertMaterial( { color: 0x666666, map: texture} )
         );
         wall.position.x = (toX+fromX)*fieldSize/2;
         wall.position.y = wallHeight/2;
         wall.position.z = (toZ+fromZ)*fieldSize/2;
+        wall.castShadow = true;
+        wall.receiveShadow = true;
         scene.add(wall);
     }
 
     function placeColumn(x, z) {
         var column = new THREE.Mesh(
             new THREE.CylinderGeometry(fieldSize/1.5, fieldSize/1.5, wallHeight, 32),
-            new THREE.MeshLambertMaterial( {color: 0xff3333} )
+            new THREE.MeshLambertMaterial( {color: 0x770000} )
         );
         column.position.x = x*fieldSize;
         column.position.y = wallHeight/2;
@@ -31,7 +41,7 @@ window.onload = function () {
 
     function canStepInto(x, z) {
         // todo jest zle
-        return m(Math.floor(x/fieldSize+0.5), Math.floor(z/fieldSize+0.5))===' ';
+        return m(Math.floor(x/fieldSize+0.5), Math.floor(z/fieldSize+0.5))!=='#';
     }
 
     function drawFloor() {
@@ -43,10 +53,11 @@ window.onload = function () {
         //texture.magFilter = THREE.LinearFilter;
 
         var geometry = new THREE.PlaneGeometry( 400, 400 );
-        var material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
+        var material = new THREE.MeshLambertMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
         material.map = texture;
         var plane = new THREE.Mesh( geometry, material );
         plane.rotation.x = 3.14/2;
+        plane.receiveShadow = true;
         scene.add(plane);
     }
 
@@ -55,7 +66,7 @@ window.onload = function () {
             var startX = null;
             for(var x=0; x<map[z].length; x++) {
                 if(startX==null && m(x, z)==='#') startX = x;
-                else if(m(x, z)===' ') {
+                else if(m(x, z)!=='#') {
                     if(startX!=null) {
                         if(x!=startX+1) placeWall(startX, z, x-1, z);
                         else if(m(x-1, z-1)!=='#' && m(x-1, z+1)!=='#') placeColumn(x-1, z);
@@ -104,15 +115,26 @@ window.onload = function () {
     }
 
     function addLights() {
-        var light = new THREE.AmbientLight( 0x444444 ); // soft white light
+        // var light = new THREE.AmbientLight( 0x444444 ); // soft white light
         scene.add( light );
 
         for(var z=0; z<map.length; z++) {
             for(var x=0; x<map[z].length; x++) {
                 if(m(x, z)==='*') {
-                    light = new THREE.PointLight( 0xffff00, 1, 100 );
-                    light.position.set(x*fieldSize, wallHeight, z*fieldSize);
-                    scene.add( light );
+                    var spotLight = new THREE.SpotLight( 0xffffff );
+                    spotLight.position.set(x*fieldSize, wallHeight, z*fieldSize);
+                    spotLight.target.position.set(x*fieldSize, 0, z*fieldSize);
+
+                    spotLight.castShadow = true;
+
+                    // spotLight.shadow.mapSize.width = 1024;
+                    // spotLight.shadow.mapSize.height = 1024;
+
+                    // spotLight.shadow.camera.near = 500;
+                    // spotLight.shadow.camera.far = 4000;
+                    // spotLight.shadow.camera.fov = 30;
+
+                    scene.add( spotLight );
                 }
             }
         }
@@ -120,10 +142,10 @@ window.onload = function () {
 
     var map = [
         "####################",
-        "###          #      ",
+        "      ###          #",
         "####  #    *  ###  #",
         "#  #  #  # #  # ## #",
-        "#  * #    #   # *# #",
+        "#  * #*   #   # *# #",
         "#  ##      #     # #",
         "#     *   ## # #   #",
         "# ## ### #  ## ## ##",
@@ -149,6 +171,7 @@ window.onload = function () {
     // scene init
     var renderer = new THREE.WebGLRenderer();
     renderer.setSize( 0.9*window.innerWidth, 0.9*window.innerHeight );  // TODO make it 100% screen
+    renderer.shadowMap.enabled = true;
     document.body.appendChild( renderer.domElement );
 
     // camera init
