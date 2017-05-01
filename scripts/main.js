@@ -31,7 +31,7 @@ window.onload = function () {
 
     function canStepInto(x, z) {
         // todo jest zle
-        return m(Math.floor(x/fieldSize-0.5), Math.floor(z/fieldSize-0.5))===' ';
+        return m(Math.floor(x/fieldSize+0.5), Math.floor(z/fieldSize+0.5))===' ';
     }
 
     function drawFloor() {
@@ -54,7 +54,6 @@ window.onload = function () {
         for(var z=0; z<map.length; z++) {
             var startX = null;
             for(var x=0; x<map[z].length; x++) {
-                console.log(x+' '+z+' '+startX);
                 if(startX==null && m(x, z)==='#') startX = x;
                 else if(m(x, z)===' ') {
                     if(startX!=null) {
@@ -78,6 +77,30 @@ window.onload = function () {
             }
             if(startZ!=null) placeWall(x, startZ, x, map.length-1);
         }
+    }
+    
+    function drawSkybox() {
+        // http://www.custommapmakers.org/skyboxes.php
+        var loader = new THREE.CubeTextureLoader();
+        loader.setPath('images/skybox/');
+        var texture = loader.load([
+            'b.jpg',
+            'f.jpg',
+            'd.jpg',
+            'u.jpg',
+            'r.jpg',
+            'l.jpg'
+        ]);
+        texture.wrapS = THREE.ClampToEdgeWrapping;
+        texture.wrapT = THREE.ClampToEdgeWrapping;
+        texture.minFilter = THREE.NearestFilter;
+        texture.magFilter = THREE.NearestFilter;
+
+        skybox = new THREE.Mesh(
+            new THREE.BoxGeometry( 160, 160, 160 ),
+            new THREE.MeshBasicMaterial( { color: 0xffffff, envMap: texture, side: THREE.BackSide} )
+        );
+        scene.add( skybox );
     }
 
     function addLights() {
@@ -119,7 +142,9 @@ window.onload = function () {
     var myHeight = 3;
 
     var wallHeight = 5;
-    var wallWidth = 2;
+    var wallWidth = 1;
+
+    var skybox;
 
     // scene init
     var renderer = new THREE.WebGLRenderer();
@@ -133,15 +158,14 @@ window.onload = function () {
     camera.lookAt({x: startingPosition.x*fieldSize+1, y: myHeight, z: 0});
     camera.rotation.order = 'YXZ';
 
+    drawSkybox();
     drawFloor();
     drawWalls();
     addLights();
 
     var render = function () {
         requestAnimationFrame( render );
-
-        //cube.rotation.x += 0.01;
-
+        skybox.position.copy(camera.position);
         camera.updateProjectionMatrix();
         renderer.render(scene, camera);
     };
