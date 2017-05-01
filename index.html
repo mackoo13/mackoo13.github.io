@@ -33,15 +33,18 @@
     }
 
     var map = [
-      "  #  ",
-      "#####",
-      "#    ",
-      "### #",
-      "  # #",
-      "#####",
-      "#    "
+        "####################",
+        "###          #      ",
+        "####  #    *  ###  #",
+        "#  #  #  # #  # ## #",
+        "#  * #    #   # *# #",
+        "#  ##      #     # #",
+        "#     *   ## # #   #",
+        "# ## ### #  ## ## ##",
+        "#        #  #   #  #",
+        "####################"
     ];
-    var fieldSize = 1;
+    var fieldSize = 4;
 
     var scene = new THREE.Scene();
     var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
@@ -49,13 +52,13 @@
 	var stepHeight = 0.15;
 	var walkingSpeed = 0.65;
 	var rotationSpeed = 0.25;
-	var myHeight = 33;
-	var wallHeight = 3;
-	var wallWidth = 0.2;
+	var myHeight = 3;
+	var wallHeight = 5;
+	var wallWidth = 2;
 
     camera.position.y = myHeight;
     camera.up = new THREE.Vector3(0,1,0);
-    camera.lookAt({x: 0, y: myHeight/11, z: 0});
+    camera.lookAt({x: 0, y: myHeight, z: 0});
 	
 
     var renderer = new THREE.WebGLRenderer();
@@ -96,6 +99,18 @@
             }
         }
         if(startX!=null) placeWall(startX, y, map[y].length-1, y);
+    }
+
+    for(var x=0; x<map[0].length; x++) {
+        var startZ = null;
+        for(var z=0; z<map.length; z++) {
+            if(startZ==null && m(x, z)==='#') startZ = z;
+            else if(m(x, z)===' ') {
+                if(startZ!=null && z!=startZ) placeWall(x, startZ, x, z-1);
+                startZ = null;
+            }
+        }
+        if(startZ!=null) placeWall(x, startZ, x, map.length-1);
     }
 
 
