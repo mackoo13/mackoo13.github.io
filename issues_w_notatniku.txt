@@ -1,2 +1,3 @@
 ﻿#1 Jak sie wcisnie 'd' i obróci o ponad 180, to potem '<-' dziala jak 'd' :O
 #2 Nie ma obrazka checkerboard (dodane - close issue #2)
+ 
