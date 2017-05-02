@@ -5,8 +5,6 @@ window.onload = function () {
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
         texture.repeat.set( 20, 3 );
-        //texture.minFilter = THREE.LinearNearest;
-        //texture.magFilter = THREE.LinearFilter;
 
         var xSize = (toX-fromX)*fieldSize + 2*wallWidth;
         var zSize = (toZ-fromZ)*fieldSize + 2*wallWidth;
@@ -115,24 +113,26 @@ window.onload = function () {
     }
 
     function addLights() {
-        // var light = new THREE.AmbientLight( 0x444444 ); // soft white light
+        var light = new THREE.AmbientLight( 0x444444 ); // soft white light
         scene.add( light );
 
         for(var z=0; z<map.length; z++) {
             for(var x=0; x<map[z].length; x++) {
                 if(m(x, z)==='*') {
                     var spotLight = new THREE.SpotLight( 0xffffff );
-                    spotLight.position.set(x*fieldSize, wallHeight, z*fieldSize);
-                    spotLight.target.position.set(x*fieldSize, 0, z*fieldSize);
+                    var zx = 1;
+                    var zz = 1;
+                    spotLight.position.set(zx*fieldSize, wallHeight, zz*fieldSize);
+                    spotLight.target.position.set(zx*fieldSize, 0, zz*fieldSize);
 
                     spotLight.castShadow = true;
 
-                    // spotLight.shadow.mapSize.width = 1024;
-                    // spotLight.shadow.mapSize.height = 1024;
+                    spotLight.shadow.mapSize.width = 1024;
+                    spotLight.shadow.mapSize.height = 1024;
 
-                    // spotLight.shadow.camera.near = 500;
-                    // spotLight.shadow.camera.far = 4000;
-                    // spotLight.shadow.camera.fov = 30;
+                    spotLight.shadow.camera.near = 2;
+                    spotLight.shadow.camera.far = 40;
+                    // spotLight.shadow.camera.fov = 150;
 
                     scene.add( spotLight );
                 }
@@ -142,10 +142,10 @@ window.onload = function () {
 
     var map = [
         "####################",
-        "      ###          #",
+        " *    ###          #",
         "####  #    *  ###  #",
         "#  #  #  # #  # ## #",
-        "#  * #*   #   # *# #",
+        "#  * #*    #   # *# #",
         "#  ##      #     # #",
         "#     *   ## # #   #",
         "# ## ### #  ## ## ##",
@@ -160,7 +160,7 @@ window.onload = function () {
     var walkingSpeed = 0.65;
     var rotationSpeed = 0.25;
 
-    var startingPosition = { x: 8, z: 5 };
+    var startingPosition = { x: 2, z: 1 };
     var myHeight = 3;
 
     var wallHeight = 5;
