@@ -4,10 +4,11 @@ window.onload = function () {
         var texture = new THREE.TextureLoader().load( "images/stone.jpg" );
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set( 20, 3 );
+        texture.repeat.set( Math.max(toX-fromX, toZ-fromZ), 3 );
 
-        var xSize = (toX-fromX)*fieldSize + 2*wallWidth;
-        var zSize = (toZ-fromZ)*fieldSize + 2*wallWidth;
+        var xSize = (toX-fromX)*fieldSize;
+        var zSize = (toZ-fromZ)*fieldSize;
+        if(toX===fromX) xSize+=2*wallWidth; else zSize+=2*wallWidth;
 
         var wall = new THREE.Mesh(
             new THREE.BoxGeometry( xSize, wallHeight, zSize ),
@@ -16,15 +17,18 @@ window.onload = function () {
         wall.position.x = (toX+fromX)*fieldSize/2;
         wall.position.y = wallHeight/2;
         wall.position.z = (toZ+fromZ)*fieldSize/2;
-        wall.castShadow = true;
-        wall.receiveShadow = true;
         scene.add(wall);
     }
 
     function placeColumn(x, z) {
+        var texture = new THREE.TextureLoader().load( "images/stone.jpg" );
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set( 5, 3 );
+
         var column = new THREE.Mesh(
             new THREE.CylinderGeometry(fieldSize/1.5, fieldSize/1.5, wallHeight, 32),
-            new THREE.MeshLambertMaterial( {color: 0x770000} )
+            new THREE.MeshLambertMaterial( {color: 0x550022, map: texture} )
         );
         column.position.x = x*fieldSize;
         column.position.y = wallHeight/2;
@@ -43,7 +47,7 @@ window.onload = function () {
     }
 
     function drawFloor() {
-        var texture = new THREE.TextureLoader().load( "images/checkerboard.jpg" );
+        var texture = new THREE.TextureLoader().load( "images/crate.jpg" );
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
         texture.repeat.set( 8, 8 );
@@ -51,11 +55,10 @@ window.onload = function () {
         //texture.magFilter = THREE.LinearFilter;
 
         var geometry = new THREE.PlaneGeometry( 400, 400 );
-        var material = new THREE.MeshLambertMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
+        var material = new THREE.MeshLambertMaterial( {color: 0xffffff, side: THREE.DoubleSide} );
         material.map = texture;
         var plane = new THREE.Mesh( geometry, material );
         plane.rotation.x = 3.14/2;
-        plane.receiveShadow = true;
         scene.add(plane);
     }
 
@@ -113,28 +116,18 @@ window.onload = function () {
     }
 
     function addLights() {
-        var light = new THREE.AmbientLight( 0x444444 ); // soft white light
-        scene.add( light );
+        var ambientLight = new THREE.AmbientLight( 0xffffff ); // soft white light
+        scene.add( ambientLight );
 
         for(var z=0; z<map.length; z++) {
             for(var x=0; x<map[z].length; x++) {
                 if(m(x, z)==='*') {
-                    var spotLight = new THREE.SpotLight( 0xffffff );
-                    var zx = 1;
-                    var zz = 1;
-                    spotLight.position.set(zx*fieldSize, wallHeight, zz*fieldSize);
-                    spotLight.target.position.set(zx*fieldSize, 0, zz*fieldSize);
-
-                    spotLight.castShadow = true;
-
-                    spotLight.shadow.mapSize.width = 1024;
-                    spotLight.shadow.mapSize.height = 1024;
-
-                    spotLight.shadow.camera.near = 2;
-                    spotLight.shadow.camera.far = 40;
-                    // spotLight.shadow.camera.fov = 150;
-
-                    scene.add( spotLight );
+                    var light = new THREE.PointLight( 0xffffff, 5, 3*fieldSize );
+                    light.position.set(x*fieldSize, wallHeight, z*fieldSize);
+                    scene.add( light );
+                    var candleLight = new THREE.PointLight( 0xaa6600, 19, 2*fieldSize );
+                    candleLight.position.set(x*fieldSize, wallHeight, z*fieldSize);
+                    scene.add( candleLight );
                 }
             }
         }
@@ -163,7 +156,7 @@ window.onload = function () {
     var startingPosition = { x: 2, z: 1 };
     var myHeight = 3;
 
-    var wallHeight = 5;
+    var wallHeight = 8;
     var wallWidth = 1;
 
     var skybox;
@@ -171,7 +164,6 @@ window.onload = function () {
     // scene init
     var renderer = new THREE.WebGLRenderer();
     renderer.setSize( 0.9*window.innerWidth, 0.9*window.innerHeight );  // TODO make it 100% screen
-    renderer.shadowMap.enabled = true;
     document.body.appendChild( renderer.domElement );
 
     // camera init
