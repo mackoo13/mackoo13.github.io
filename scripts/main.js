@@ -42,7 +42,7 @@ window.onload = function () {
     }
 
     function canStepInto(x, z) {
-        // todo jest zle
+        // todo jest zle // mozemy zostawić i powiedzieć, że to taki feature, jak w symulatorze kozy
         return m(Math.floor(x/fieldSize+0.5), Math.floor(z/fieldSize+0.5))!=='#';
     }
 
@@ -90,7 +90,7 @@ window.onload = function () {
             if(startZ!=null) placeWall(x, startZ, x, map.length-1);
         }
     }
-    
+
     function drawSkybox() {
         // http://www.custommapmakers.org/skyboxes.php
         var loader = new THREE.CubeTextureLoader();
@@ -133,6 +133,15 @@ window.onload = function () {
         }
     }
 
+    function placeMirror(x, z){
+      var verticalMirror = new THREE.Mirror( fieldSize, wallHeight, {  textureWidth: fieldSize, textureHeight: wallHeight, color:0x889999 } );
+        verticalMirror.position.y = fieldSize;
+				verticalMirror.position.x = x*fieldSize;
+				verticalMirror.position.z = z*fieldSize +fieldSize/2;
+				scene.add( verticalMirror );
+
+    }
+
     var map = [
         "####################",
         " *    ###          #",
@@ -170,13 +179,14 @@ window.onload = function () {
     var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
     camera.position.set(startingPosition.x*fieldSize, myHeight, startingPosition.z*fieldSize);
     camera.up = new THREE.Vector3(0,1,0);
-    camera.lookAt({x: startingPosition.x*fieldSize+1, y: myHeight, z: 0});
+    camera.lookAt({x: startingPosition.x*fieldSize+1, y: myHeight, z: 0}); //dlaczego z jest inaczej niż w startingPosition?
     camera.rotation.order = 'YXZ';
 
     drawSkybox();
     drawFloor();
     drawWalls();
     addLights();
+    placeMirror(2,0);
 
     var render = function () {
         requestAnimationFrame( render );
