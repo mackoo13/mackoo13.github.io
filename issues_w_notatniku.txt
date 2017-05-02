@@ -1,1 +1,3 @@
 ﻿#1 Jak sie wcisnie 'd' i obróci o ponad 180, to potem '<-' dziala jak 'd' :O
+#3 Tekstury w skyboxie powinny mieć wymiary z potega dwojki
+#4 Labirynt wyswietla sie w lustrzanym odbiciu - wystarczy pewnie zamienic 'z' na '-z' w kilku miejscach przy rysowaniu
