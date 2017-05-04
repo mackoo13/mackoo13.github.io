@@ -1,16 +1,27 @@
 window.onload = function () {
-    function placePainting(wallX, wallZ, facingX, facingZ) {
-        var haroldPath = "images/harold"+Math.floor(Math.random()*4)+1+".png";
+
+    function placePainting(wallX, wallZ, facing) {
+        var haroldPath = "images/harold"+(Math.floor(Math.random()*4)+1)+".png";
         var texture = new THREE.TextureLoader().load(haroldPath);
-        var borderMaterial = new THREE.MeshLambertMaterial( { color: 0x666666, map: texture} );
         var haroldMaterial = new THREE.MeshLambertMaterial( { color: 0x666666, map: texture} );
 
-        var wall = new THREE.Mesh(
-            new THREE.BoxGeometry( xSize, wallHeight, zSize ),
-            new THREE.MeshFaceMaterial(
-                [haroldMaterial, borderMaterial, borderMaterial, borderMaterial, borderMaterial, borderMaterial]
-            )
+        var harold = new THREE.Mesh(
+            new THREE.BoxGeometry(
+                facing==='n' || facing==='s' ? 0.9*fieldSize : 0.05*wallWidth,
+                0.9*fieldSize,
+                facing==='w' || facing==='e' ? 0.9*fieldSize : 0.05*wallWidth
+            ),
+            haroldMaterial
         );
+        harold.position.x = wallX*fieldSize;
+        if(facing==='w') harold.position.x += wallWidth;
+        if(facing==='e') harold.position.x -= wallWidth;
+        harold.position.y = wallHeight/2;
+        harold.position.z = wallZ*fieldSize;
+        if(facing==='n') harold.position.z += wallWidth;
+        if(facing==='s') harold.position.z -= wallWidth;
+        scene.add(harold);
+
     }
 
     function placeWall(fromX, fromZ, toX, toZ) {
@@ -42,6 +53,19 @@ window.onload = function () {
         wall.position.y = wallHeight/2;
         wall.position.z = (toZ+fromZ)*fieldSize/2;
         scene.add(wall);
+
+        // place paintings
+        if(lenX>1) {
+            var paintingX = Math.ceil((toX+fromX)/2);
+            if(Math.random()>0.5 && m(paintingX, toZ+1)!=='#') placePainting(paintingX, toZ, 's');
+            else if(m(paintingX, toZ-1)!=='#') placePainting(paintingX, toZ, 'n');
+        }
+
+        if(lenZ>1) {
+            var paintingZ = Math.ceil((toZ+fromZ)/2);
+            if(Math.random()>0.5 && m(toX+1, paintingZ)!=='#') placePainting(toX, paintingZ, 'w');
+            else if(m(toX, paintingZ)!=='#') placePainting(toX, paintingZ, 'e');
+        }
     }
 
     function placeColumn(x, z) {
@@ -90,10 +114,6 @@ window.onload = function () {
     }
 
     function drawWalls() {
-		for(var z=0; z<map.length; z++) {
-			map[z] = map[z].split("").reverse().join("");
-		}
-		
         for(var z=0; z<map.length; z++) {
             var startX = null;
             for(var x=0; x<=map[z].length; x++) {
@@ -236,8 +256,9 @@ window.onload = function () {
 				camera.position.z = newZ;
 				step += 0.2;
 			}
-		}
-		
+		} else if(currentAction=='cu') camera.rotateOnAxis((new THREE.Vector3(1, 0, 0)).normalize(), degInRad(1));
+		else if(currentAction=='cd') camera.rotateOnAxis((new THREE.Vector3(1, 0, 0)).normalize(), degInRad(-1));
+
         camera.updateProjectionMatrix();
         renderer.render(scene, camera);
     };
@@ -259,11 +280,11 @@ window.onload = function () {
                 break;
             case 68 : // d
                 // look up
-                camera.rotateOnAxis((new THREE.Vector3(1, 0, 0)).normalize(), degInRad(1)); //niby działa, ale sześcian jakiś rozjechany :O
+                currentAction = 'cu';
                 break;
             case 67 : // c
                 // look down
-                camera.rotateOnAxis((new THREE.Vector3(1, 0, 0)).normalize(), degInRad(-1));
+                currentAction = 'cd';
                 break;
 
             case 81 : // q
