@@ -90,6 +90,7 @@ window.onload = function () {
     }
 
     function canMakeStep(x1, z1, x2, z2) {
+        if(x2<0 || x2>map[0].length || z2<0 || z2>map.length) return false;
         var x1Field = Math.floor(x1/fieldSize+0.5);
         var z1Field = Math.floor(z1/fieldSize+0.5);
         var x2Field = Math.floor(x2/fieldSize+0.5);
@@ -97,19 +98,17 @@ window.onload = function () {
         return m(x2Field, z2Field)!=='#' && (m(x1Field, z2Field)!=='#' || m(x2Field, z1Field)!=='#');
     }
 
-    function drawFloor() {
-        var texture = new THREE.TextureLoader().load( "images/crate.jpg" );
+    function drawFloor(x, z) {
+        var texture = new THREE.TextureLoader().load( "images/floor.png" );
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set( 8, 8 );
-        //texture.minFilter = THREE.LinearNearest;
-        //texture.magFilter = THREE.LinearFilter;
+        texture.repeat.set( 2*(x+2), 2*(z+2) );
 
-        var geometry = new THREE.PlaneGeometry( 400, 400 );
-        var material = new THREE.MeshLambertMaterial( {color: 0xffffff, side: THREE.DoubleSide} );
-        material.map = texture;
+        var geometry = new THREE.PlaneGeometry( (x+2)*fieldSize, (z+2)*fieldSize );
+        var material = new THREE.MeshLambertMaterial( {color: 0x888888, side: THREE.DoubleSide, map: texture} );
         var plane = new THREE.Mesh( geometry, material );
         plane.rotation.x = 3.14/2;
+        plane.position.set(x*fieldSize/2, 0, z*fieldSize/2);
         scene.add(plane);
     }
 
@@ -228,8 +227,8 @@ window.onload = function () {
     camera.rotation.order = 'YXZ';
 
     drawSkybox();
-    drawFloor();
     drawWalls();
+    drawFloor(map[0].length, map.length);
     addLights();
 
     var render = function () {
@@ -243,7 +242,7 @@ window.onload = function () {
 			newX = camera.position.x - walkingSpeed*Math.sin(camera.rotation.y);
 			newZ = camera.position.z - walkingSpeed*Math.cos(camera.rotation.y);
 			if(canMakeStep(camera.position.x, camera.position.z, newX, newZ)) {
-				camera.position.x = newX
+				camera.position.x = newX;
 				camera.position.y = myHeight + stepHeight*Math.sin(step)*Math.sin(step);
 				camera.position.z = newZ;
 				step += 0.2;
@@ -252,7 +251,7 @@ window.onload = function () {
 			newX = camera.position.x + walkingSpeed*Math.sin(camera.rotation.y);
 			newZ = camera.position.z + walkingSpeed*Math.cos(camera.rotation.y);
 			if(canMakeStep(camera.position.x, camera.position.z, newX, newZ)) {
-				camera.position.x = newX
+				camera.position.x = newX;
 				camera.position.y = myHeight + stepHeight*Math.sin(step)*Math.sin(step);
 				camera.position.z = newZ;
 				step += 0.2;
@@ -298,7 +297,7 @@ window.onload = function () {
 
         }
     }, false);
-    document.addEventListener('keyup', function (event) {
+    document.addEventListener('keyup', function() {
         step = 0;
         camera.position.y = myHeight;
 		currentAction = '';
