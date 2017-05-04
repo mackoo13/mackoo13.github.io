@@ -132,6 +132,28 @@ window.onload = function () {
             }
         }
     }
+	
+	function createNewTeapot(x,z) {
+				var size = 0.5;
+				var	segments = 10; 
+				var bottom = true;
+				var lid = true;
+				var body = true;
+				var fitLid = false;
+				var blinn = true
+				var teapotGeometry = new THREE.TeapotBufferGeometry( size, segments, bottom, lid, body, fitLid, blinn)
+				teapot = new THREE.Mesh(
+					teapotGeometry,
+					new THREE.MeshPhongMaterial( {color: 0x8b8762, shininess: 50} ) );
+					
+				teapot.position.x = x;
+				teapot.position.z = z;
+				teapot.position.y = 3;
+					
+				
+				scene.add( teapot );
+			}
+
 
     function placeMirror(x, z){
       var verticalMirror = new THREE.Mirror( fieldSize, wallHeight, {  textureWidth: fieldSize, textureHeight: wallHeight, color:0x889999 } );
@@ -169,6 +191,7 @@ window.onload = function () {
     var wallWidth = 1;
 
     var skybox;
+	var teapot;
 
     // scene init
     var renderer = new THREE.WebGLRenderer();
@@ -186,11 +209,14 @@ window.onload = function () {
     drawFloor();
     drawWalls();
     addLights();
-    placeMirror(2,0);
+    createNewTeapot(-2, -2);
+	createNewTeapot(-2, -4);
 
     var render = function () {
         requestAnimationFrame( render );
         skybox.position.copy(camera.position);
+		teapot.rotation.y += 0.05;
+		teapot.rotation.x += 0.05;
         camera.updateProjectionMatrix();
         renderer.render(scene, camera);
     };
