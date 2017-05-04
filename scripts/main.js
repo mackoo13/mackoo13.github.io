@@ -1,18 +1,25 @@
 window.onload = function () {
     function placeWall(fromX, fromZ, toX, toZ) {
 
-        var texture = new THREE.TextureLoader().load( "images/stone.jpg" );
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set( Math.max(toX-fromX, toZ-fromZ), 3 );
+        var textureX = new THREE.TextureLoader().load( "images/stone.jpg" );
+        textureX.wrapS = THREE.RepeatWrapping;
+        textureX.wrapT = THREE.RepeatWrapping;
+        textureX.repeat.set(Math.max(Math.abs(toX-fromX), 1), 3 );
+		var materialX = new THREE.MeshLambertMaterial( { color: 0x666666, map: textureX} )
+		
+        var textureZ = new THREE.TextureLoader().load( "images/stone.jpg" );
+        textureZ.wrapS = THREE.RepeatWrapping;
+        textureZ.wrapT = THREE.RepeatWrapping;
+        textureZ.repeat.set(Math.max(Math.abs(toZ-fromZ), 1), 3 );
+		var materialZ = new THREE.MeshLambertMaterial( { color: 0x666666, map: textureZ} )
 
-        var xSize = (toX-fromX)*fieldSize;
-        var zSize = (toZ-fromZ)*fieldSize;
+        var xSize = Math.abs(toX-fromX)*fieldSize;
+        var zSize = Math.abs(toZ-fromZ)*fieldSize;
         if(toX===fromX) xSize+=2*wallWidth; else zSize+=2*wallWidth;
 
         var wall = new THREE.Mesh(
             new THREE.BoxGeometry( xSize, wallHeight, zSize ),
-            new THREE.MeshLambertMaterial( { color: 0x666666, map: texture} )
+            new THREE.MeshFaceMaterial([materialZ, materialZ, materialX, materialX, materialX, materialX])
         );
         wall.position.x = (toX+fromX)*fieldSize/2;
         wall.position.y = wallHeight/2;
@@ -28,7 +35,7 @@ window.onload = function () {
 
         var column = new THREE.Mesh(
             new THREE.CylinderGeometry(fieldSize/1.5, fieldSize/1.5, wallHeight, 32),
-            new THREE.MeshLambertMaterial( {color: 0x550022, map: texture} )
+            new THREE.MeshLambertMaterial( {color: 0x330000, map: texture} )
         );
         column.position.x = x*fieldSize;
         column.position.y = wallHeight/2;
@@ -66,9 +73,13 @@ window.onload = function () {
     }
 
     function drawWalls() {
+		for(var z=0; z<map.length; z++) {
+			map[z] = map[z].split("").reverse().join("");
+		}
+		
         for(var z=0; z<map.length; z++) {
             var startX = null;
-            for(var x=0; x<map[z].length; x++) {
+            for(var x=0; x<=map[z].length; x++) {
                 if(startX==null && m(x, z)==='#') startX = x;
                 else if(m(x, z)!=='#') {
                     if(startX!=null) {
@@ -141,7 +152,7 @@ window.onload = function () {
         " *    ###          #",
         "####  #    *  ###  #",
         "#  #  #  # #  # ## #",
-        "#  * #*    #   # *# #",
+        "#  * #*    #  # *# #",
         "#  ##      #     # #",
         "#     *   ## # #   #",
         "# ## ### #  ## ## ##",
