@@ -1,20 +1,37 @@
 window.onload = function () {
+    function placePainting(wallX, wallZ, facingX, facingZ) {
+        var haroldPath = "images/harold"+Math.floor(Math.random()*4)+1+".png";
+        var texture = new THREE.TextureLoader().load(haroldPath);
+        var borderMaterial = new THREE.MeshLambertMaterial( { color: 0x666666, map: texture} );
+        var haroldMaterial = new THREE.MeshLambertMaterial( { color: 0x666666, map: texture} );
+
+        var wall = new THREE.Mesh(
+            new THREE.BoxGeometry( xSize, wallHeight, zSize ),
+            new THREE.MeshFaceMaterial(
+                [haroldMaterial, borderMaterial, borderMaterial, borderMaterial, borderMaterial, borderMaterial]
+            )
+        );
+    }
+
     function placeWall(fromX, fromZ, toX, toZ) {
+
+        var lenX = Math.abs(toX-fromX);
+        var lenZ = Math.abs(toZ-fromZ);
 
         var textureX = new THREE.TextureLoader().load( "images/stone.jpg" );
         textureX.wrapS = THREE.RepeatWrapping;
         textureX.wrapT = THREE.RepeatWrapping;
-        textureX.repeat.set(Math.max(Math.abs(toX-fromX), 1), 3 );
-		var materialX = new THREE.MeshLambertMaterial( { color: 0x666666, map: textureX} )
+        textureX.repeat.set(Math.max(lenX, 1), 3 );
+		var materialX = new THREE.MeshLambertMaterial( { color: 0x666666, map: textureX} );
 		
         var textureZ = new THREE.TextureLoader().load( "images/stone.jpg" );
         textureZ.wrapS = THREE.RepeatWrapping;
         textureZ.wrapT = THREE.RepeatWrapping;
-        textureZ.repeat.set(Math.max(Math.abs(toZ-fromZ), 1), 3 );
-		var materialZ = new THREE.MeshLambertMaterial( { color: 0x666666, map: textureZ} )
+        textureZ.repeat.set(Math.max(lenZ, 1), 3 );
+		var materialZ = new THREE.MeshLambertMaterial( { color: 0x666666, map: textureZ} );
 
-        var xSize = Math.abs(toX-fromX)*fieldSize;
-        var zSize = Math.abs(toZ-fromZ)*fieldSize;
+        var xSize = lenX*fieldSize;
+        var zSize = lenZ*fieldSize;
         if(toX===fromX) xSize+=2*wallWidth; else zSize+=2*wallWidth;
 
         var wall = new THREE.Mesh(
