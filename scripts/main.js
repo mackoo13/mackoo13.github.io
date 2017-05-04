@@ -1,23 +1,76 @@
 window.onload = function () {
+
+    function placePainting(wallX, wallZ, facing) { //     <3 <3
+        var haroldPath = "images/harold"+(Math.floor(Math.random()*4)+1)+".png";   // <3 <3
+        var texture = new THREE.TextureLoader().load(haroldPath);      // <3 <3
+        var haroldMaterial = new THREE.MeshLambertMaterial( { color: 0x666666, map: texture} );    
+
+        var harold = new THREE.Mesh(
+            new THREE.BoxGeometry(
+                facing==='n' || facing==='s' ? 0.9*fieldSize : 0.05*wallWidth,
+                0.9*fieldSize,
+                facing==='w' || facing==='e' ? 0.9*fieldSize : 0.05*wallWidth
+            ),
+            haroldMaterial
+        );
+        harold.position.x = wallX*fieldSize;
+        if(facing==='w') harold.position.x += wallWidth;
+        if(facing==='e') harold.position.x -= wallWidth;
+        harold.position.y = wallHeight/2;
+        harold.position.z = wallZ*fieldSize;
+        if(facing==='n') harold.position.z += wallWidth;
+        if(facing==='s') harold.position.z -= wallWidth;
+        scene.add(harold);
+
+    }    // <3 <3
+
     function placeWall(fromX, fromZ, toX, toZ) {
 
-        var texture = new THREE.TextureLoader().load( "images/stone.jpg" );
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set( Math.max(toX-fromX, toZ-fromZ), 3 );
+        var lenX = Math.abs(toX-fromX);
+        var lenZ = Math.abs(toZ-fromZ);
 
-        var xSize = (toX-fromX)*fieldSize;
-        var zSize = (toZ-fromZ)*fieldSize;
+        var textureX = new THREE.TextureLoader().load( "images/stone.jpg" );
+
+        var bump = THREE.ImageUtils.loadTexture("images/stone-bump.jpg")
+        textureX.bumpMap = bump;
+        textureX.bumpScale = 0.2;
+
+        textureX.wrapS = THREE.RepeatWrapping;
+        textureX.wrapT = THREE.RepeatWrapping;
+        textureX.repeat.set(Math.max(lenX, 1), 3 );
+		var materialX = new THREE.MeshLambertMaterial( { color: 0x666666, map: textureX} );
+
+        var textureZ = new THREE.TextureLoader().load( "images/stone.jpg" );
+        textureZ.wrapS = THREE.RepeatWrapping;
+        textureZ.wrapT = THREE.RepeatWrapping;
+        textureZ.repeat.set(Math.max(lenZ, 1), 3 );
+		var materialZ = new THREE.MeshLambertMaterial( { color: 0x666666, map: textureZ} );
+
+        var xSize = lenX*fieldSize;
+        var zSize = lenZ*fieldSize;
         if(toX===fromX) xSize+=2*wallWidth; else zSize+=2*wallWidth;
 
         var wall = new THREE.Mesh(
             new THREE.BoxGeometry( xSize, wallHeight, zSize ),
-            new THREE.MeshLambertMaterial( { color: 0x666666, map: texture} )
+            new THREE.MeshFaceMaterial([materialZ, materialZ, materialX, materialX, materialX, materialX])
         );
         wall.position.x = (toX+fromX)*fieldSize/2;
         wall.position.y = wallHeight/2;
         wall.position.z = (toZ+fromZ)*fieldSize/2;
         scene.add(wall);
+
+        // place paintings
+        if(lenX>1) {
+            var paintingX = Math.ceil((toX+fromX)/2);
+            if(Math.random()>0.5 && m(paintingX, toZ+1)!=='#') placePainting(paintingX, toZ, 's');
+            else if(m(paintingX, toZ-1)!=='#') placePainting(paintingX, toZ, 'n');
+        }
+
+        if(lenZ>1) {
+            var paintingZ = Math.ceil((toZ+fromZ)/2);
+            if(Math.random()>0.5 && m(toX+1, paintingZ)!=='#') placePainting(toX, paintingZ, 'w');
+            else if(m(toX, paintingZ)!=='#') placePainting(toX, paintingZ, 'e');
+        }
     }
 
     function placeColumn(x, z) {
@@ -28,7 +81,7 @@ window.onload = function () {
 
         var column = new THREE.Mesh(
             new THREE.CylinderGeometry(fieldSize/1.5, fieldSize/1.5, wallHeight, 32),
-            new THREE.MeshLambertMaterial( {color: 0x550022, map: texture} )
+            new THREE.MeshLambertMaterial( {color: 0x330000, map: texture} )
         );
         column.position.x = x*fieldSize;
         column.position.y = wallHeight/2;
@@ -41,31 +94,33 @@ window.onload = function () {
         return map[z][x];
     }
 
-    function canStepInto(x, z) {
-        // todo jest zle
-        return m(Math.floor(x/fieldSize+0.5), Math.floor(z/fieldSize+0.5))!=='#';
+    function canMakeStep(x1, z1, x2, z2) {
+        var x1Field = Math.floor(x1/fieldSize+0.5);
+        var z1Field = Math.floor(z1/fieldSize+0.5);
+        var x2Field = Math.floor(x2/fieldSize+0.5);
+        var z2Field = Math.floor(z2/fieldSize+0.5);
+        if(x2Field<0 || x2Field>map[0].length || z2Field<0 || z2Field>map.length) return false;
+        return m(x2Field, z2Field)!=='#' && (m(x1Field, z2Field)!=='#' || m(x2Field, z1Field)!=='#');
     }
 
-    function drawFloor() {
-        var texture = new THREE.TextureLoader().load( "images/crate.jpg" );
+    function drawFloor(x, z) {
+        var texture = new THREE.TextureLoader().load( "images/floor.png" );
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set( 8, 8 );
-        //texture.minFilter = THREE.LinearNearest;
-        //texture.magFilter = THREE.LinearFilter;
+        texture.repeat.set( 2*(x+2), 2*(z+2) );
 
-        var geometry = new THREE.PlaneGeometry( 400, 400 );
-        var material = new THREE.MeshLambertMaterial( {color: 0xffffff, side: THREE.DoubleSide} );
-        material.map = texture;
+        var geometry = new THREE.PlaneGeometry( (x+2)*fieldSize, (z+2)*fieldSize );
+        var material = new THREE.MeshLambertMaterial( {color: 0x888888, side: THREE.DoubleSide, map: texture} );
         var plane = new THREE.Mesh( geometry, material );
         plane.rotation.x = 3.14/2;
+        plane.position.set(x*fieldSize/2, 0, z*fieldSize/2);
         scene.add(plane);
     }
 
     function drawWalls() {
         for(var z=0; z<map.length; z++) {
             var startX = null;
-            for(var x=0; x<map[z].length; x++) {
+            for(var x=0; x<=map[z].length; x++) {
                 if(startX==null && m(x, z)==='#') startX = x;
                 else if(m(x, z)!=='#') {
                     if(startX!=null) {
@@ -78,9 +133,9 @@ window.onload = function () {
             if(startX!=null) placeWall(startX, z, map[z].length-1, z);
         }
 
-        for(var x=0; x<map[0].length; x++) {
+        for(x=0; x<map[0].length; x++) {
             var startZ = null;
-            for(var z=0; z<map.length; z++) {
+            for(z=0; z<map.length; z++) {
                 if(startZ==null && m(x, z)==='#') startZ = z;
                 else if(m(x, z)!=='#') {
                     if(startZ!=null && z!=startZ+1) placeWall(x, startZ, x, z-1);
@@ -90,7 +145,7 @@ window.onload = function () {
             if(startZ!=null) placeWall(x, startZ, x, map.length-1);
         }
     }
-    
+
     function drawSkybox() {
         // http://www.custommapmakers.org/skyboxes.php
         var loader = new THREE.CubeTextureLoader();
@@ -138,7 +193,7 @@ window.onload = function () {
         " *    ###          #",
         "####  #    *  ###  #",
         "#  #  #  # #  # ## #",
-        "#  * #*    #   # *# #",
+        "#  * #*    #  # *# #",
         "#  ##      #     # #",
         "#     *   ## # #   #",
         "# ## ### #  ## ## ##",
@@ -150,8 +205,8 @@ window.onload = function () {
     var scene = new THREE.Scene();
     var step = 0;
     var stepHeight = 0.15;
-    var walkingSpeed = 0.65;
-    var rotationSpeed = 0.25;
+    var walkingSpeed = 0.15;
+    var rotationSpeed = 0.05;
 
     var startingPosition = { x: 2, z: 1 };
     var myHeight = 3;
@@ -159,7 +214,10 @@ window.onload = function () {
     var wallHeight = 8;
     var wallWidth = 1;
 
+	var currentAction = '';
+
     var skybox;
+    var newX, newZ;
 
     // scene init
     var renderer = new THREE.WebGLRenderer();
@@ -174,13 +232,40 @@ window.onload = function () {
     camera.rotation.order = 'YXZ';
 
     drawSkybox();
-    drawFloor();
     drawWalls();
+    drawFloor(map[0].length, map.length);
     addLights();
 
     var render = function () {
         requestAnimationFrame( render );
+
         skybox.position.copy(camera.position);
+
+		if(currentAction=='l') camera.rotation.y += rotationSpeed;
+		else if(currentAction=='r') camera.rotation.y -= rotationSpeed;
+		else if(currentAction=='u') {
+			newX = camera.position.x - walkingSpeed*Math.sin(camera.rotation.y);
+			newZ = camera.position.z - walkingSpeed*Math.cos(camera.rotation.y);
+			if(canMakeStep(camera.position.x, camera.position.z, newX, newZ)) {
+				camera.position.x = newX;
+				camera.position.y = myHeight + stepHeight*Math.sin(step)*Math.sin(step);
+				camera.position.z = newZ;
+				step += 0.2;
+			}
+		} else if(currentAction=='d') {
+			newX = camera.position.x + walkingSpeed*Math.sin(camera.rotation.y);
+			newZ = camera.position.z + walkingSpeed*Math.cos(camera.rotation.y);
+			if(canMakeStep(camera.position.x, camera.position.z, newX, newZ)) {
+				camera.position.x = newX;
+				camera.position.y = myHeight + stepHeight*Math.sin(step)*Math.sin(step);
+				camera.position.z = newZ;
+				step += 0.2;
+			}
+		} else if(currentAction=='cu' && camera.rotation.x<3.14/2)
+		    camera.rotateOnAxis((new THREE.Vector3(1, 0, 0)).normalize(), degInRad(1));
+		else if(currentAction=='cd' && camera.rotation.x>-3.14/2)
+		    camera.rotateOnAxis((new THREE.Vector3(1, 0, 0)).normalize(), degInRad(-1));
+
         camera.updateProjectionMatrix();
         renderer.render(scene, camera);
     };
@@ -189,34 +274,24 @@ window.onload = function () {
         var keycode = event.keyCode;
         switch(keycode){
             case 37 : //left
-                camera.rotation.y += rotationSpeed;
+				currentAction = 'l';
                 break;
             case 38 : // up
-                var newX = camera.position.x - walkingSpeed*Math.sin(camera.rotation.y);
-                var newZ = camera.position.z - walkingSpeed*Math.cos(camera.rotation.y);
-                if(canStepInto(newX, newZ)) {
-                    camera.position.x = newX
-                    camera.position.y = myHeight + stepHeight*Math.sin(step)*Math.sin(step);
-                    camera.position.z = newZ;
-                    step += 0.2;
-                }
+                currentAction = 'u';
                 break;
             case 39 : // right
-                camera.rotation.y -= rotationSpeed;
+				currentAction = 'r';
                 break;
             case 40 : // down
-                camera.position.x += walkingSpeed*Math.sin(camera.rotation.y);
-                camera.position.y = myHeight + stepHeight*Math.sin(step)*Math.sin(step);
-                camera.position.z += walkingSpeed*Math.cos(camera.rotation.y);
-                step += 0.2;
+				currentAction = 'd';
                 break;
             case 68 : // d
                 // look up
-                camera.rotateOnAxis((new THREE.Vector3(1, 0, 0)).normalize(), degInRad(1)); //niby działa, ale sześcian jakiś rozjechany :O
+                currentAction = 'cu';
                 break;
             case 67 : // c
                 // look down
-                camera.rotateOnAxis((new THREE.Vector3(1, 0, 0)).normalize(), degInRad(-1));
+                currentAction = 'cd';
                 break;
 
             case 81 : // q
@@ -229,9 +304,10 @@ window.onload = function () {
 
         }
     }, false);
-    document.addEventListener('keyup', function (event) {
+    document.addEventListener('keyup', function() {
         step = 0;
         camera.position.y = myHeight;
+		currentAction = '';
     }, false);
 
     function degInRad(deg) {
