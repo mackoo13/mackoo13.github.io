@@ -41,9 +41,12 @@ window.onload = function () {
         return map[z][x];
     }
 
-    function canStepInto(x, z) {
-        // todo jest zle
-        return m(Math.floor(x/fieldSize+0.5), Math.floor(z/fieldSize+0.5))!=='#';
+    function canMakeStep(x1, z1, x2, z2) {
+        var x1Field = Math.floor(x1/fieldSize+0.5);
+        var z1Field = Math.floor(z1/fieldSize+0.5);
+        var x2Field = Math.floor(x2/fieldSize+0.5);
+        var z2Field = Math.floor(z2/fieldSize+0.5);
+        return m(x2Field, z2Field)!=='#' && (m(x1Field, z2Field)!=='#' || m(x2Field, z1Field)!=='#');
     }
 
     function drawFloor() {
@@ -150,14 +153,16 @@ window.onload = function () {
     var scene = new THREE.Scene();
     var step = 0;
     var stepHeight = 0.15;
-    var walkingSpeed = 0.65;
-    var rotationSpeed = 0.25;
+    var walkingSpeed = 0.15;
+    var rotationSpeed = 0.05;
 
     var startingPosition = { x: 2, z: 1 };
     var myHeight = 3;
 
     var wallHeight = 8;
     var wallWidth = 1;
+	
+	var currentAction = '';
 
     var skybox;
 
@@ -180,7 +185,31 @@ window.onload = function () {
 
     var render = function () {
         requestAnimationFrame( render );
+		
         skybox.position.copy(camera.position);
+		
+		if(currentAction=='l') camera.rotation.y += rotationSpeed;
+		else if(currentAction=='r') camera.rotation.y -= rotationSpeed;
+		else if(currentAction=='u') {
+			var newX = camera.position.x - walkingSpeed*Math.sin(camera.rotation.y);
+			var newZ = camera.position.z - walkingSpeed*Math.cos(camera.rotation.y);
+			if(canMakeStep(camera.position.x, camera.position.z, newX, newZ)) {
+				camera.position.x = newX
+				camera.position.y = myHeight + stepHeight*Math.sin(step)*Math.sin(step);
+				camera.position.z = newZ;
+				step += 0.2;
+			}
+		} else if(currentAction=='d') {
+			var newX = camera.position.x + walkingSpeed*Math.sin(camera.rotation.y);
+			var newZ = camera.position.z + walkingSpeed*Math.cos(camera.rotation.y);
+			if(canMakeStep(camera.position.x, camera.position.z, newX, newZ)) {
+				camera.position.x = newX
+				camera.position.y = myHeight + stepHeight*Math.sin(step)*Math.sin(step);
+				camera.position.z = newZ;
+				step += 0.2;
+			}
+		}
+		
         camera.updateProjectionMatrix();
         renderer.render(scene, camera);
     };
@@ -189,26 +218,16 @@ window.onload = function () {
         var keycode = event.keyCode;
         switch(keycode){
             case 37 : //left
-                camera.rotation.y += rotationSpeed;
+				currentAction = 'l';
                 break;
             case 38 : // up
-                var newX = camera.position.x - walkingSpeed*Math.sin(camera.rotation.y);
-                var newZ = camera.position.z - walkingSpeed*Math.cos(camera.rotation.y);
-                if(canStepInto(newX, newZ)) {
-                    camera.position.x = newX
-                    camera.position.y = myHeight + stepHeight*Math.sin(step)*Math.sin(step);
-                    camera.position.z = newZ;
-                    step += 0.2;
-                }
+                currentAction = 'u';
                 break;
             case 39 : // right
-                camera.rotation.y -= rotationSpeed;
+				currentAction = 'r';
                 break;
             case 40 : // down
-                camera.position.x += walkingSpeed*Math.sin(camera.rotation.y);
-                camera.position.y = myHeight + stepHeight*Math.sin(step)*Math.sin(step);
-                camera.position.z += walkingSpeed*Math.cos(camera.rotation.y);
-                step += 0.2;
+				currentAction = 'd';
                 break;
             case 68 : // d
                 // look up
@@ -232,6 +251,7 @@ window.onload = function () {
     document.addEventListener('keyup', function (event) {
         step = 0;
         camera.position.y = myHeight;
+		currentAction = '';
     }, false);
 
     function degInRad(deg) {
