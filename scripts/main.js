@@ -1,9 +1,9 @@
 window.onload = function () {
 
-    function placePainting(wallX, wallZ, facing) {
-        var haroldPath = "images/harold"+(Math.floor(Math.random()*4)+1)+".png";
-        var texture = new THREE.TextureLoader().load(haroldPath);
-        var haroldMaterial = new THREE.MeshLambertMaterial( { color: 0x666666, map: texture} );
+    function placePainting(wallX, wallZ, facing) { //     <3 <3
+        var haroldPath = "images/harold"+(Math.floor(Math.random()*4)+1)+".png";   // <3 <3
+        var texture = new THREE.TextureLoader().load(haroldPath);      // <3 <3
+        var haroldMaterial = new THREE.MeshLambertMaterial( { color: 0x666666, map: texture} );    
 
         var harold = new THREE.Mesh(
             new THREE.BoxGeometry(
@@ -22,7 +22,7 @@ window.onload = function () {
         if(facing==='s') harold.position.z -= wallWidth;
         scene.add(harold);
 
-    }
+    }    // <3 <3
 
     function placeWall(fromX, fromZ, toX, toZ) {
 
@@ -30,11 +30,16 @@ window.onload = function () {
         var lenZ = Math.abs(toZ-fromZ);
 
         var textureX = new THREE.TextureLoader().load( "images/stone.jpg" );
+
+        var bump = THREE.ImageUtils.loadTexture("images/stone-bump.jpg")
+        textureX.bumpMap = bump;
+        textureX.bumpScale = 0.2;
+
         textureX.wrapS = THREE.RepeatWrapping;
         textureX.wrapT = THREE.RepeatWrapping;
         textureX.repeat.set(Math.max(lenX, 1), 3 );
 		var materialX = new THREE.MeshLambertMaterial( { color: 0x666666, map: textureX} );
-		
+
         var textureZ = new THREE.TextureLoader().load( "images/stone.jpg" );
         textureZ.wrapS = THREE.RepeatWrapping;
         textureZ.wrapT = THREE.RepeatWrapping;
@@ -141,7 +146,7 @@ window.onload = function () {
             if(startZ!=null) placeWall(x, startZ, x, map.length-1);
         }
     }
-    
+
     function drawSkybox() {
         // http://www.custommapmakers.org/skyboxes.php
         var loader = new THREE.CubeTextureLoader();
@@ -209,7 +214,7 @@ window.onload = function () {
 
     var wallHeight = 8;
     var wallWidth = 1;
-	
+
 	var currentAction = '';
 
     var skybox;
@@ -234,9 +239,9 @@ window.onload = function () {
 
     var render = function () {
         requestAnimationFrame( render );
-		
+
         skybox.position.copy(camera.position);
-		
+
 		if(currentAction=='l') camera.rotation.y += rotationSpeed;
 		else if(currentAction=='r') camera.rotation.y -= rotationSpeed;
 		else if(currentAction=='u') {
