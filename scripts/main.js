@@ -90,11 +90,11 @@ window.onload = function () {
     }
 
     function canMakeStep(x1, z1, x2, z2) {
-        if(x2<0 || x2>map[0].length || z2<0 || z2>map.length) return false;
         var x1Field = Math.floor(x1/fieldSize+0.5);
         var z1Field = Math.floor(z1/fieldSize+0.5);
         var x2Field = Math.floor(x2/fieldSize+0.5);
         var z2Field = Math.floor(z2/fieldSize+0.5);
+        if(x2Field<0 || x2Field>map[0].length || z2Field<0 || z2Field>map.length) return false;
         return m(x2Field, z2Field)!=='#' && (m(x1Field, z2Field)!=='#' || m(x2Field, z1Field)!=='#');
     }
 
@@ -256,8 +256,10 @@ window.onload = function () {
 				camera.position.z = newZ;
 				step += 0.2;
 			}
-		} else if(currentAction=='cu') camera.rotateOnAxis((new THREE.Vector3(1, 0, 0)).normalize(), degInRad(1));
-		else if(currentAction=='cd') camera.rotateOnAxis((new THREE.Vector3(1, 0, 0)).normalize(), degInRad(-1));
+		} else if(currentAction=='cu' && camera.rotation.x<3.14/2)
+		    camera.rotateOnAxis((new THREE.Vector3(1, 0, 0)).normalize(), degInRad(1));
+		else if(currentAction=='cd' && camera.rotation.x>-3.14/2)
+		    camera.rotateOnAxis((new THREE.Vector3(1, 0, 0)).normalize(), degInRad(-1));
 
         camera.updateProjectionMatrix();
         renderer.render(scene, camera);
