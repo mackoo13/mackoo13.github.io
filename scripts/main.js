@@ -129,9 +129,9 @@ window.onload = function () {
             if(startX!=null) placeWall(startX, z, map[z].length-1, z);
         }
 
-        for(var x=0; x<map[0].length; x++) {
+        for(x=0; x<map[0].length; x++) {
             var startZ = null;
-            for(var z=0; z<map.length; z++) {
+            for(z=0; z<map.length; z++) {
                 if(startZ==null && m(x, z)==='#') startZ = z;
                 else if(m(x, z)!=='#') {
                     if(startZ!=null && z!=startZ+1) placeWall(x, startZ, x, z-1);
@@ -213,6 +213,7 @@ window.onload = function () {
 	var currentAction = '';
 
     var skybox;
+    var newX, newZ;
 
     // scene init
     var renderer = new THREE.WebGLRenderer();
@@ -239,8 +240,8 @@ window.onload = function () {
 		if(currentAction=='l') camera.rotation.y += rotationSpeed;
 		else if(currentAction=='r') camera.rotation.y -= rotationSpeed;
 		else if(currentAction=='u') {
-			var newX = camera.position.x - walkingSpeed*Math.sin(camera.rotation.y);
-			var newZ = camera.position.z - walkingSpeed*Math.cos(camera.rotation.y);
+			newX = camera.position.x - walkingSpeed*Math.sin(camera.rotation.y);
+			newZ = camera.position.z - walkingSpeed*Math.cos(camera.rotation.y);
 			if(canMakeStep(camera.position.x, camera.position.z, newX, newZ)) {
 				camera.position.x = newX
 				camera.position.y = myHeight + stepHeight*Math.sin(step)*Math.sin(step);
@@ -248,8 +249,8 @@ window.onload = function () {
 				step += 0.2;
 			}
 		} else if(currentAction=='d') {
-			var newX = camera.position.x + walkingSpeed*Math.sin(camera.rotation.y);
-			var newZ = camera.position.z + walkingSpeed*Math.cos(camera.rotation.y);
+			newX = camera.position.x + walkingSpeed*Math.sin(camera.rotation.y);
+			newZ = camera.position.z + walkingSpeed*Math.cos(camera.rotation.y);
 			if(canMakeStep(camera.position.x, camera.position.z, newX, newZ)) {
 				camera.position.x = newX
 				camera.position.y = myHeight + stepHeight*Math.sin(step)*Math.sin(step);
