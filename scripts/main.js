@@ -1,18 +1,25 @@
 window.onload = function () {
     function placeWall(fromX, fromZ, toX, toZ) {
 
-        var texture = new THREE.TextureLoader().load( "images/stone.jpg" );
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set( Math.max(toX-fromX, toZ-fromZ), 3 );
+        var textureX = new THREE.TextureLoader().load( "images/stone.jpg" );
+        textureX.wrapS = THREE.RepeatWrapping;
+        textureX.wrapT = THREE.RepeatWrapping;
+        textureX.repeat.set(Math.max(Math.abs(toX-fromX), 1), 3 );
+		var materialX = new THREE.MeshLambertMaterial( { color: 0x666666, map: textureX} )
+		
+        var textureZ = new THREE.TextureLoader().load( "images/stone.jpg" );
+        textureZ.wrapS = THREE.RepeatWrapping;
+        textureZ.wrapT = THREE.RepeatWrapping;
+        textureZ.repeat.set(Math.max(Math.abs(toZ-fromZ), 1), 3 );
+		var materialZ = new THREE.MeshLambertMaterial( { color: 0x666666, map: textureZ} )
 
-        var xSize = (toX-fromX)*fieldSize;
-        var zSize = (toZ-fromZ)*fieldSize;
+        var xSize = Math.abs(toX-fromX)*fieldSize;
+        var zSize = Math.abs(toZ-fromZ)*fieldSize;
         if(toX===fromX) xSize+=2*wallWidth; else zSize+=2*wallWidth;
 
         var wall = new THREE.Mesh(
             new THREE.BoxGeometry( xSize, wallHeight, zSize ),
-            new THREE.MeshLambertMaterial( { color: 0x666666, map: texture} )
+            new THREE.MeshFaceMaterial([materialZ, materialZ, materialX, materialX, materialX, materialX])
         );
         wall.position.x = (toX+fromX)*fieldSize/2;
         wall.position.y = wallHeight/2;
@@ -28,7 +35,7 @@ window.onload = function () {
 
         var column = new THREE.Mesh(
             new THREE.CylinderGeometry(fieldSize/1.5, fieldSize/1.5, wallHeight, 32),
-            new THREE.MeshLambertMaterial( {color: 0x550022, map: texture} )
+            new THREE.MeshLambertMaterial( {color: 0x330000, map: texture} )
         );
         column.position.x = x*fieldSize;
         column.position.y = wallHeight/2;
@@ -41,9 +48,12 @@ window.onload = function () {
         return map[z][x];
     }
 
-    function canStepInto(x, z) {
-        // todo jest zle // mozemy zostawić i powiedzieć, że to taki feature, jak w symulatorze kozy
-        return m(Math.floor(x/fieldSize+0.5), Math.floor(z/fieldSize+0.5))!=='#';
+    function canMakeStep(x1, z1, x2, z2) {
+        var x1Field = Math.floor(x1/fieldSize+0.5);
+        var z1Field = Math.floor(z1/fieldSize+0.5);
+        var x2Field = Math.floor(x2/fieldSize+0.5);
+        var z2Field = Math.floor(z2/fieldSize+0.5);
+        return m(x2Field, z2Field)!=='#' && (m(x1Field, z2Field)!=='#' || m(x2Field, z1Field)!=='#');
     }
 
     function drawFloor() {
@@ -63,9 +73,13 @@ window.onload = function () {
     }
 
     function drawWalls() {
+		for(var z=0; z<map.length; z++) {
+			map[z] = map[z].split("").reverse().join("");
+		}
+		
         for(var z=0; z<map.length; z++) {
             var startX = null;
-            for(var x=0; x<map[z].length; x++) {
+            for(var x=0; x<=map[z].length; x++) {
                 if(startX==null && m(x, z)==='#') startX = x;
                 else if(m(x, z)!=='#') {
                     if(startX!=null) {
@@ -90,7 +104,7 @@ window.onload = function () {
             if(startZ!=null) placeWall(x, startZ, x, map.length-1);
         }
     }
-
+    
     function drawSkybox() {
         // http://www.custommapmakers.org/skyboxes.php
         var loader = new THREE.CubeTextureLoader();
@@ -133,21 +147,12 @@ window.onload = function () {
         }
     }
 
-    function placeMirror(x, z){
-      var verticalMirror = new THREE.Mirror( fieldSize, wallHeight, {  textureWidth: fieldSize, textureHeight: wallHeight, color:0x889999 } );
-        verticalMirror.position.y = fieldSize;
-				verticalMirror.position.x = x*fieldSize;
-				verticalMirror.position.z = z*fieldSize +fieldSize/2;
-				scene.add( verticalMirror );
-
-    }
-
     var map = [
         "####################",
         " *    ###          #",
         "####  #    *  ###  #",
         "#  #  #  # #  # ## #",
-        "#  * #*    #   # *# #",
+        "#  * #*    #  # *# #",
         "#  ##      #     # #",
         "#     *   ## # #   #",
         "# ## ### #  ## ## ##",
@@ -159,14 +164,16 @@ window.onload = function () {
     var scene = new THREE.Scene();
     var step = 0;
     var stepHeight = 0.15;
-    var walkingSpeed = 0.65;
-    var rotationSpeed = 0.25;
+    var walkingSpeed = 0.15;
+    var rotationSpeed = 0.05;
 
     var startingPosition = { x: 2, z: 1 };
     var myHeight = 3;
 
     var wallHeight = 8;
     var wallWidth = 1;
+	
+	var currentAction = '';
 
     var skybox;
 
@@ -179,18 +186,41 @@ window.onload = function () {
     var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
     camera.position.set(startingPosition.x*fieldSize, myHeight, startingPosition.z*fieldSize);
     camera.up = new THREE.Vector3(0,1,0);
-    camera.lookAt({x: startingPosition.x*fieldSize+1, y: myHeight, z: 0}); //dlaczego z jest inaczej niż w startingPosition?
+    camera.lookAt({x: startingPosition.x*fieldSize+1, y: myHeight, z: 0});
     camera.rotation.order = 'YXZ';
 
     drawSkybox();
     drawFloor();
     drawWalls();
     addLights();
-    placeMirror(2,0);
 
     var render = function () {
         requestAnimationFrame( render );
+		
         skybox.position.copy(camera.position);
+		
+		if(currentAction=='l') camera.rotation.y += rotationSpeed;
+		else if(currentAction=='r') camera.rotation.y -= rotationSpeed;
+		else if(currentAction=='u') {
+			var newX = camera.position.x - walkingSpeed*Math.sin(camera.rotation.y);
+			var newZ = camera.position.z - walkingSpeed*Math.cos(camera.rotation.y);
+			if(canMakeStep(camera.position.x, camera.position.z, newX, newZ)) {
+				camera.position.x = newX
+				camera.position.y = myHeight + stepHeight*Math.sin(step)*Math.sin(step);
+				camera.position.z = newZ;
+				step += 0.2;
+			}
+		} else if(currentAction=='d') {
+			var newX = camera.position.x + walkingSpeed*Math.sin(camera.rotation.y);
+			var newZ = camera.position.z + walkingSpeed*Math.cos(camera.rotation.y);
+			if(canMakeStep(camera.position.x, camera.position.z, newX, newZ)) {
+				camera.position.x = newX
+				camera.position.y = myHeight + stepHeight*Math.sin(step)*Math.sin(step);
+				camera.position.z = newZ;
+				step += 0.2;
+			}
+		}
+		
         camera.updateProjectionMatrix();
         renderer.render(scene, camera);
     };
@@ -199,26 +229,16 @@ window.onload = function () {
         var keycode = event.keyCode;
         switch(keycode){
             case 37 : //left
-                camera.rotation.y += rotationSpeed;
+				currentAction = 'l';
                 break;
             case 38 : // up
-                var newX = camera.position.x - walkingSpeed*Math.sin(camera.rotation.y);
-                var newZ = camera.position.z - walkingSpeed*Math.cos(camera.rotation.y);
-                if(canStepInto(newX, newZ)) {
-                    camera.position.x = newX
-                    camera.position.y = myHeight + stepHeight*Math.sin(step)*Math.sin(step);
-                    camera.position.z = newZ;
-                    step += 0.2;
-                }
+                currentAction = 'u';
                 break;
             case 39 : // right
-                camera.rotation.y -= rotationSpeed;
+				currentAction = 'r';
                 break;
             case 40 : // down
-                camera.position.x += walkingSpeed*Math.sin(camera.rotation.y);
-                camera.position.y = myHeight + stepHeight*Math.sin(step)*Math.sin(step);
-                camera.position.z += walkingSpeed*Math.cos(camera.rotation.y);
-                step += 0.2;
+				currentAction = 'd';
                 break;
             case 68 : // d
                 // look up
@@ -242,6 +262,7 @@ window.onload = function () {
     document.addEventListener('keyup', function (event) {
         step = 0;
         camera.position.y = myHeight;
+		currentAction = '';
     }, false);
 
     function degInRad(deg) {
