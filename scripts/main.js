@@ -183,10 +183,10 @@ window.onload = function () {
           var candleLight = new THREE.PointLight( 0xaa6600, 19, 2*fieldSize );
           candleLight.position.set(x*fieldSize, wallHeight, z*fieldSize);
           scene.add( candleLight );
-          let cords = { x_pos: x, z_pos : z};
           var tmp_teapot = createNewTeapot(x,z);
-          teapots.set(cords, tmp_teapot);
+          teapots.push(tmp_teapot);
           scene.add(tmp_teapot);
+          teapots_amount++;
         }
       }
     }
@@ -213,158 +213,182 @@ window.onload = function () {
     }
 
 
-    var map = [
-      "####################",
-      " *    ###          #",
-      "####  #    *  ###  #",
-      "#  #  #  # #  # ## #",
-      "#  * #*    #  # *# #",
-      "#  ##      #     # #",
-      "#     *   ## # #   #",
-      "# ## ### #  ## ## ##",
-      "#        #  #   #  #",
-      "####################"
-    ];
-    var fieldSize = 4;
+    function isNearTeapot( x_pos, z_pos, teapot){
+      if( teapot != undefined &&
+        x_pos < teapot.position.x + 1 && x_pos > teapot.position.x - 1 &&
+        z_pos < teapot.position.z + 1 && z_pos > teapot.position.z - 1){
+          return true;
+        }
+        else return false;
+      }
 
-    var scene = new THREE.Scene();
-    var step = 0;
-    var stepHeight = 0.15;
-    var walkingSpeed = 0.15;
-    var rotationSpeed = 0.05;
-
-    var startingPosition = { x: 2, z: 1 };
-    var myHeight = 3;
-
-    var wallHeight = 8;
-    var wallWidth = 1;
-
-    var currentAction = '';
-
-    var skybox;
-    var teapots = new Map();
-
-
-
-
-    var newX, newZ;
-
-
-    // scene init
-    var renderer = new THREE.WebGLRenderer();
-    renderer.setSize( 0.9*window.innerWidth, 0.9*window.innerHeight );  // TODO make it 100% screen
-    document.body.appendChild( renderer.domElement );
-
-    // camera init
-    var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
-    camera.position.set(startingPosition.x*fieldSize, myHeight, startingPosition.z*fieldSize);
-    camera.up = new THREE.Vector3(0,1,0);
-    camera.lookAt({x: startingPosition.x*fieldSize+1, y: myHeight, z: 0});
-    camera.rotation.order = 'YXZ';
-
-    drawSkybox();
-    drawWalls();
-    drawFloor(map[0].length, map.length);
-    addLights();
-
-
-
-
-    var render = function () {
-      requestAnimationFrame( render );
-
-      skybox.position.copy(camera.position);
-
-
-      //rotate teapots
-      teapots.forEach(function(teapot) {
-      teapot.rotation.x+=0.01;
-      teapot.rotation.z+=0.01;
-      });
-
-      //walking into teapot
-      var x_pos = camera.position.x;
-      var z_pos = camera.position.z;
-
-      if( teapots.get({x_pos, z_pos})){
-        scene
-        console.log("walking into teapot!");
+      function removeTeapot(teapot){
+        teapot.material.dispose();
+        teapot.geometry.dispose();
+        scene.remove(teapot);
       }
 
 
+      var map = [
+        "####################",
+        " *    ###          #",
+        "####  #    *  ###  #",
+        "#  #  #  # #  # ## #",
+        "#  * #*    #  # *# #",
+        "#  ##      #     # #",
+        "#     *   ## # #   #",
+        "# ## ### #  ## ## ##",
+        "#        #  #   #  #",
+        "####################"
+      ];
+      var fieldSize = 4;
 
-      if(currentAction=='l') camera.rotation.y += rotationSpeed;
-      else if(currentAction=='r') camera.rotation.y -= rotationSpeed;
-      else if(currentAction=='u') {
-        newX = camera.position.x - walkingSpeed*Math.sin(camera.rotation.y);
-        newZ = camera.position.z - walkingSpeed*Math.cos(camera.rotation.y);
-        if(canMakeStep(camera.position.x, camera.position.z, newX, newZ)) {
-          camera.position.x = newX;
-          camera.position.y = myHeight + stepHeight*Math.sin(step)*Math.sin(step);
-          camera.position.z = newZ;
-          step += 0.2;
+      var scene = new THREE.Scene();
+      var step = 0;
+      var stepHeight = 0.15;
+      var walkingSpeed = 0.15;
+      var rotationSpeed = 0.05;
+
+      var startingPosition = { x: 2, z: 1 };
+      var myHeight = 3;
+
+      var wallHeight = 8;
+      var wallWidth = 1;
+
+      var currentAction = '';
+
+      var skybox;
+      var teapots = [];
+      var teapots_amount = 0;
+      var teapots_found = 0;
+
+
+
+
+      var newX, newZ;
+
+
+      // scene init
+      var renderer = new THREE.WebGLRenderer();
+      renderer.setSize( 0.9*window.innerWidth, 0.9*window.innerHeight );  // TODO make it 100% screen
+      document.body.appendChild( renderer.domElement );
+
+      // camera init
+      var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
+      camera.position.set(startingPosition.x*fieldSize, myHeight, startingPosition.z*fieldSize);
+      camera.up = new THREE.Vector3(0,1,0);
+      camera.lookAt({x: startingPosition.x*fieldSize+1, y: myHeight, z: 0});
+      camera.rotation.order = 'YXZ';
+
+      drawSkybox();
+      drawWalls();
+      drawFloor(map[0].length, map.length);
+      addLights();
+
+      var render = function () {
+        requestAnimationFrame( render );
+
+        skybox.position.copy(camera.position);
+
+
+        //rotate teapots
+        teapots.forEach(function(teapot) {
+          teapot.rotation.x+=0.01;
+          teapot.rotation.z+=0.01;
+        });
+
+        //walking into teapot
+        var x_pos = camera.position.x;
+        var z_pos = camera.position.z;
+
+        teapots.forEach(function(t, i, teapots){
+          if(isNearTeapot(x_pos, z_pos,t)){
+            teapots_found ++;
+            removeTeapot(t);
+            delete teapots[i];
+            console.log("teapots found: "+ teapots_found);
+          }});
+
+          if(teapots_found == teapots_amount){
+            console.log("You've found all teapots!");
+
+          }
+
+
+
+
+          if(currentAction=='l') camera.rotation.y += rotationSpeed;
+          else if(currentAction=='r') camera.rotation.y -= rotationSpeed;
+          else if(currentAction=='u') {
+            newX = camera.position.x - walkingSpeed*Math.sin(camera.rotation.y);
+            newZ = camera.position.z - walkingSpeed*Math.cos(camera.rotation.y);
+            if(canMakeStep(camera.position.x, camera.position.z, newX, newZ)) {
+              camera.position.x = newX;
+              camera.position.y = myHeight + stepHeight*Math.sin(step)*Math.sin(step);
+              camera.position.z = newZ;
+              step += 0.2;
+            }
+          } else if(currentAction=='d') {
+            newX = camera.position.x + walkingSpeed*Math.sin(camera.rotation.y);
+            newZ = camera.position.z + walkingSpeed*Math.cos(camera.rotation.y);
+            if(canMakeStep(camera.position.x, camera.position.z, newX, newZ)) {
+              camera.position.x = newX;
+              camera.position.y = myHeight + stepHeight*Math.sin(step)*Math.sin(step);
+              camera.position.z = newZ;
+              step += 0.2;
+            }
+          } else if(currentAction=='cu' && camera.rotation.x<3.14/2)
+          camera.rotateOnAxis((new THREE.Vector3(1, 0, 0)).normalize(), degInRad(1));
+          else if(currentAction=='cd' && camera.rotation.x>-3.14/2)
+          camera.rotateOnAxis((new THREE.Vector3(1, 0, 0)).normalize(), degInRad(-1));
+
+          camera.updateProjectionMatrix();
+          renderer.render(scene, camera);
+        };
+
+        document.addEventListener('keydown', function (event) {
+          var keycode = event.keyCode;
+          switch(keycode){
+            case 37 : //left
+            currentAction = 'l';
+            break;
+            case 38 : // up
+            currentAction = 'u';
+            break;
+            case 39 : // right
+            currentAction = 'r';
+            break;
+            case 40 : // down
+            currentAction = 'd';
+            break;
+            case 68 : // d
+            // look up
+            currentAction = 'cu';
+            break;
+            case 67 : // c
+            // look down
+            currentAction = 'cd';
+            break;
+
+            case 81 : // q
+            camera.position.z +=walkingSpeed;
+            break;
+
+            case 87 : // w
+            camera.position.x -=walkingSpeed;
+            break;
+
+          }
+        }, false);
+        document.addEventListener('keyup', function() {
+          step = 0;
+          camera.position.y = myHeight;
+          currentAction = '';
+        }, false);
+
+        function degInRad(deg) {
+          return deg * Math.PI / 180;
         }
-      } else if(currentAction=='d') {
-        newX = camera.position.x + walkingSpeed*Math.sin(camera.rotation.y);
-        newZ = camera.position.z + walkingSpeed*Math.cos(camera.rotation.y);
-        if(canMakeStep(camera.position.x, camera.position.z, newX, newZ)) {
-          camera.position.x = newX;
-          camera.position.y = myHeight + stepHeight*Math.sin(step)*Math.sin(step);
-          camera.position.z = newZ;
-          step += 0.2;
-        }
-      } else if(currentAction=='cu' && camera.rotation.x<3.14/2)
-      camera.rotateOnAxis((new THREE.Vector3(1, 0, 0)).normalize(), degInRad(1));
-      else if(currentAction=='cd' && camera.rotation.x>-3.14/2)
-      camera.rotateOnAxis((new THREE.Vector3(1, 0, 0)).normalize(), degInRad(-1));
 
-      camera.updateProjectionMatrix();
-      renderer.render(scene, camera);
-    };
-
-    document.addEventListener('keydown', function (event) {
-      var keycode = event.keyCode;
-      switch(keycode){
-        case 37 : //left
-        currentAction = 'l';
-        break;
-        case 38 : // up
-        currentAction = 'u';
-        break;
-        case 39 : // right
-        currentAction = 'r';
-        break;
-        case 40 : // down
-        currentAction = 'd';
-        break;
-        case 68 : // d
-        // look up
-        currentAction = 'cu';
-        break;
-        case 67 : // c
-        // look down
-        currentAction = 'cd';
-        break;
-
-        case 81 : // q
-        camera.position.z +=walkingSpeed;
-        break;
-
-        case 87 : // w
-        camera.position.x -=walkingSpeed;
-        break;
-
-      }
-    }, false);
-    document.addEventListener('keyup', function() {
-      step = 0;
-      camera.position.y = myHeight;
-      currentAction = '';
-    }, false);
-
-    function degInRad(deg) {
-      return deg * Math.PI / 180;
-    }
-
-    render();
-  };
+        render();
+      };
