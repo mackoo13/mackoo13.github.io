@@ -261,9 +261,7 @@ window.onload = function () {
       var teapots = [];
       var teapots_amount = 0;
       var teapots_found = 0;
-
-
-
+      var theEnd = false;
 
       var newX, newZ;
 
@@ -285,7 +283,17 @@ window.onload = function () {
       drawFloor(map[0].length, map.length);
       addLights();
 
+      var spriteMap = new THREE.TextureLoader().load( "images/harold2.png" );
+      var spriteMaterial = new THREE.SpriteMaterial( { map: spriteMap, color: 0xffffff } );
+      var sprite = new THREE.Sprite( spriteMaterial );
+
+
+
+
+
+
       var render = function () {
+
         requestAnimationFrame( render );
 
         skybox.position.copy(camera.position);
@@ -309,8 +317,13 @@ window.onload = function () {
             console.log("teapots found: "+ teapots_found);
           }});
 
-          if(teapots_found == teapots_amount){
+          if(teapots_found == teapots_amount && theEnd == false){
             console.log("You've found all teapots!");
+            sprite.position.x = x_pos;
+            sprite.position.z = z_pos;
+            sprite.position.y = myHeight;
+            scene.add( sprite );
+            theEnd = true;
 
           }
 
