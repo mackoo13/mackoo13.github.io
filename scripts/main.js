@@ -293,13 +293,23 @@ window.onload = function () {
       var spriteMaterial = new THREE.SpriteMaterial( { map: spriteMap, color: 0xffffff } );
       var sprite = new THREE.Sprite( spriteMaterial );
 
+      var helpMap = THREE.ImageUtils.loadTexture('images/help.png');
+      var helpMaterial = new THREE.SpriteMaterial( { map: helpMap, color: 0xffffff } );
+      var help = new THREE.Sprite( helpMaterial );
+      help.position.x = camera.position.x  - (fieldSize/4)*Math.sin(camera.rotation.y);
+      help.position.z = camera.position.z - (fieldSize/4)*Math.cos(camera.rotation.y);
+      help.position.y  = myHeight;
+      scene.add(help);
+
 
 
       var render = function () {
 
         requestAnimationFrame( render );
-
         skybox.position.copy(camera.position);
+
+        var x_pos = camera.position.x;
+        var z_pos = camera.position.z;
 
         if(!theEnd){
             //rotate teapots
@@ -308,9 +318,7 @@ window.onload = function () {
                 teapot.rotation.z+=0.01;
             });
 
-            //walking into teapot
-            var x_pos = camera.position.x;
-            var z_pos = camera.position.z;
+
 
             teapots.forEach(function(t, i, teapots){
                 if(isNearTeapot(x_pos, z_pos,t)){
