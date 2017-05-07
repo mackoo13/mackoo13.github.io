@@ -184,7 +184,7 @@ THREE.Mirror = function ( width, height, options ) {
 
 	scope.onBeforeRender = function ( renderer, scene, camera ) {
 
-		updateTextureMatrix( camera );
+		updateTextureEnable full screen (press m)Matrix( camera );
 
 		scope.visible = false;
 
