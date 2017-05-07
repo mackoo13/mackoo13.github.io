@@ -269,6 +269,9 @@ window.onload = function () {
       // scene init
       var renderer = new THREE.WebGLRenderer();
       renderer.setSize( 0.9*window.innerWidth, 0.9*window.innerHeight );  // TODO make it 100% screen
+      //THREEx.FullScreen.request();
+
+
       document.body.appendChild( renderer.domElement );
 
       // camera init
@@ -277,6 +280,9 @@ window.onload = function () {
       camera.up = new THREE.Vector3(0,1,0);
       camera.lookAt({x: startingPosition.x*fieldSize+1, y: myHeight, z: fieldSize});
       camera.rotation.order = 'YXZ';
+
+      THREEx.WindowResize(renderer, camera);
+      THREEx.FullScreen.bindKey({ charCode : 'm'.charCodeAt(0) });
 
       drawSkybox();
       drawWalls();
@@ -320,7 +326,6 @@ window.onload = function () {
                 sprite.position.z = camera.position.z - (fieldSize/4)*Math.cos(camera.rotation.y);
                 sprite.position.y = myHeight;
                 scene.add( sprite );
-                console.log("camera rotation" + camera.rotation.y);
                 theEnd = true;
             }
         }
