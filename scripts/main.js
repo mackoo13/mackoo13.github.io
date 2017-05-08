@@ -231,7 +231,7 @@ window.onload = function () {
 
       var map = [
         "####################",
-        " *    ###          #",
+        "   *  ###          #",
         "####  #    *  ###  #",
         "#  #  #  # #  # ## #",
         "#  * #*    #  # *# #",
@@ -304,8 +304,8 @@ window.onload = function () {
 	  var yodaMap = THREE.ImageUtils.loadTexture('images/yoda.jpg');
       var yodaMaterial = new THREE.SpriteMaterial( { map: yodaMap, color: 0xffffff } );
       var yoda = new THREE.Sprite( yodaMaterial );
-      yoda.position.x = camera.position.x  - (fieldSize*0.7)*Math.sin(camera.rotation.y);
-      yoda.position.z = camera.position.z - (fieldSize*0.7)*Math.cos(camera.rotation.y);
+      yoda.position.x = camera.position.x  - (fieldSize*0.9)*Math.sin(camera.rotation.y);
+      yoda.position.z = camera.position.z - (fieldSize*0.9)*Math.cos(camera.rotation.y);
       yoda.position.y  = myHeight;
       scene.add(yoda);
 
