@@ -249,7 +249,7 @@ window.onload = function () {
       var walkingSpeed = 0.15;
       var rotationSpeed = 0.05;
 
-      var startingPosition = { x: 2, z: 1 };
+      var startingPosition = { x: 0, z: 1 };
       var myHeight = 3;
 
       var wallHeight = 8;
@@ -269,65 +269,86 @@ window.onload = function () {
       // scene init
       var renderer = new THREE.WebGLRenderer();
       renderer.setSize( 0.9*window.innerWidth, 0.9*window.innerHeight );  // TODO make it 100% screen
+      //THREEx.FullScreen.request();
+
+
       document.body.appendChild( renderer.domElement );
 
       // camera init
       var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
       camera.position.set(startingPosition.x*fieldSize, myHeight, startingPosition.z*fieldSize);
       camera.up = new THREE.Vector3(0,1,0);
-      camera.lookAt({x: startingPosition.x*fieldSize+1, y: myHeight, z: 0});
+      camera.lookAt({x: startingPosition.x*fieldSize+1, y: myHeight, z: fieldSize});
       camera.rotation.order = 'YXZ';
+
+      THREEx.WindowResize(renderer, camera);
+      THREEx.FullScreen.bindKey({ charCode : 'm'.charCodeAt(0) });
 
       drawSkybox();
       drawWalls();
       drawFloor(map[0].length, map.length);
       addLights();
 
-      var spriteMap = new THREE.TextureLoader().load( "images/harold2.png" );
+      var spriteMap = THREE.ImageUtils.loadTexture('images/theEnd.jpg');
       var spriteMaterial = new THREE.SpriteMaterial( { map: spriteMap, color: 0xffffff } );
       var sprite = new THREE.Sprite( spriteMaterial );
 
-
-
+      var helpMap = THREE.ImageUtils.loadTexture('images/help.png');
+      var helpMaterial = new THREE.SpriteMaterial( { map: helpMap, color: 0xffffff } );
+      var help = new THREE.Sprite( helpMaterial );
+      help.position.x = camera.position.x  - (fieldSize/4)*Math.sin(camera.rotation.y);
+      help.position.z = camera.position.z - (fieldSize/4)*Math.cos(camera.rotation.y);
+      help.position.y  = myHeight;
+      scene.add(help);
+	  
+	  var yodaMap = THREE.ImageUtils.loadTexture('images/yoda.jpg');
+      var yodaMaterial = new THREE.SpriteMaterial( { map: yodaMap, color: 0xffffff } );
+      var yoda = new THREE.Sprite( yodaMaterial );
+      yoda.position.x = camera.position.x  - (fieldSize/2)*Math.sin(camera.rotation.y);
+      yoda.position.z = camera.position.z - (fieldSize/2)*Math.cos(camera.rotation.y);
+      yoda.position.y  = myHeight;
+      scene.add(yoda);
 
 
 
       var render = function () {
 
         requestAnimationFrame( render );
-
         skybox.position.copy(camera.position);
 
-
-        //rotate teapots
-        teapots.forEach(function(teapot) {
-          teapot.rotation.x+=0.01;
-          teapot.rotation.z+=0.01;
-        });
-
-        //walking into teapot
         var x_pos = camera.position.x;
         var z_pos = camera.position.z;
 
-        teapots.forEach(function(t, i, teapots){
-          if(isNearTeapot(x_pos, z_pos,t)){
-            teapots_found ++;
-            removeTeapot(t);
-            delete teapots[i];
-            console.log("teapots found: "+ teapots_found);
-          }});
-
-          if(teapots_found == teapots_amount && theEnd == false){
-            console.log("You've found all teapots!");
-            sprite.position.x = x_pos;
-            sprite.position.z = z_pos;
-            sprite.position.y = myHeight;
-            scene.add( sprite );
-            theEnd = true;
-
-          }
+        if(!theEnd){
+            //rotate teapots
+            teapots.forEach(function(teapot) {
+                teapot.rotation.x+=0.01;
+                teapot.rotation.z+=0.01;
+            });
 
 
+
+            teapots.forEach(function(t, i, teapots){
+                if(isNearTeapot(x_pos, z_pos,t)){
+                    teapots_found ++;
+                    removeTeapot(t);
+                    delete teapots[i];
+                    console.log("teapots found: "+ teapots_found);
+                }});
+
+            if(teapots_found === teapots_amount){
+                console.log("You've found all teapots!");
+                sprite.position.x = camera.position.x  - (fieldSize/4)*Math.sin(camera.rotation.y);
+                sprite.position.z = camera.position.z - (fieldSize/4)*Math.cos(camera.rotation.y);
+                sprite.position.y = myHeight;
+                scene.add( sprite );
+                theEnd = true;
+            }
+        }
+        if(theEnd){
+            sprite.position.x = camera.position.x  - (fieldSize/4)*Math.sin(camera.rotation.y);
+            sprite.position.z = camera.position.z - (fieldSize/4)*Math.cos(camera.rotation.y);
+        }
 
 
           if(currentAction=='l') camera.rotation.y += rotationSpeed;
