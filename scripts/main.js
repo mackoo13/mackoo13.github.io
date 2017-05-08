@@ -300,12 +300,12 @@ window.onload = function () {
       help.position.z = camera.position.z - (fieldSize/4)*Math.cos(camera.rotation.y);
       help.position.y  = myHeight;
       scene.add(help);
-	  
+
 	  var yodaMap = THREE.ImageUtils.loadTexture('images/yoda.jpg');
       var yodaMaterial = new THREE.SpriteMaterial( { map: yodaMap, color: 0xffffff } );
       var yoda = new THREE.Sprite( yodaMaterial );
-      yoda.position.x = camera.position.x  - (fieldSize/2)*Math.sin(camera.rotation.y);
-      yoda.position.z = camera.position.z - (fieldSize/2)*Math.cos(camera.rotation.y);
+      yoda.position.x = camera.position.x  - (fieldSize*0.7)*Math.sin(camera.rotation.y);
+      yoda.position.z = camera.position.z - (fieldSize*0.7)*Math.cos(camera.rotation.y);
       yoda.position.y  = myHeight;
       scene.add(yoda);
 
